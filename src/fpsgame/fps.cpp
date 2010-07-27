@@ -885,25 +885,29 @@ namespace game
     }
 
 	VAR(quasinameplayers,0,0,1);
+	VAR(quasiscoreenabled,0,0,1);
+	fpsent *j,*t;
     void gameplayhud(int w, int h)
     {
         glPushMatrix();
         glScalef(h/1800.0f, h/1800.0f, 1);
-
-        int pw, ph, tw, th, fw, fh;
-        text_bounds("  ", pw, ph);
-		if(player1->state == CS_SPECTATOR) {
-			if(quasileapon) text_bounds("LEAP", tw, th);
-			else text_bounds("SPECTATOR", tw, th);
+		int pw, ph, tw, th, fw, fh, dw, dh;
+		text_bounds("  ", pw, ph);
+		if(t=pointatplayer()) j = t;
+		if(quasileapon) draw_text("LEAP", 0, (1800-ph)/2);
+		else if(quasinameplayers == 1 && j) draw_text(j->name, 0, (1800-ph)/2);
+        if(quasiscoreenabled == 1){
+			draw_textf("frags: %d deaths: %d shots: %d accuracy: %d kpd: %d",0,350,player1->frags, player1->deaths, player1->totalshots,(player1->totaldamage*100)/max(player1->totalshots, 1),player1->frags/max(player1->deaths,1));
+		}
+		if(player1->state == CS_SPECTATOR && !quasileapon) {
+			text_bounds("SPECTATOR", tw, th);
 		}
         th = max(th, ph);
         fpsent *f = followingplayer();
-		if(!f && quasinameplayers == 1) f = pointatplayer(); 
         text_bounds(f ? colorname(f) : " ", fw, fh);
         fh = max(fh, ph);
-		if(player1->state == CS_SPECTATOR) {
-			if(quasileapon) draw_text("LEAP", w*1800/h - tw - pw, 1650 - th - fh);
-			else draw_text("SPECTATOR", w*1800/h - tw - pw, 1650 - th - fh);
+		if(player1->state == CS_SPECTATOR && !quasileapon) {
+			draw_text("SPECTATOR", w*1800/h - tw - pw, 1650 - th - fh);
 		}
         if(f) draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh);
 

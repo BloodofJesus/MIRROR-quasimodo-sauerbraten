@@ -120,6 +120,8 @@ namespace game
         return numgroups;
     }
 
+	VARP(quasishowfrags,0,0,1);
+	VARP(quasishowaccuracy,0,0,1);
     void renderscoreboard(g3d_gui &g, bool firstpass)
     {
         const ENetAddress *address = connectedpeer();
@@ -209,12 +211,21 @@ namespace game
                 g.pushlist(); // horizontal
             }
 
-            if(!cmode || !cmode->hidefrags())
+            if(!cmode || !cmode->hidefrags() || quasishowfrags == 1)
             { 
                 g.pushlist();
                 g.strut(7);
                 g.text("frags", fgcolor);
                 loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
+                g.poplist();
+            }
+
+			if(!cmode || !cmode->hidefrags() || quasishowaccuracy == 1)
+            { 
+                g.pushlist();
+                g.strut(7);
+                g.text("%", fgcolor);
+                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, (o->totaldamage*100)/max(o->totalshots, 1)));
                 g.poplist();
             }
 

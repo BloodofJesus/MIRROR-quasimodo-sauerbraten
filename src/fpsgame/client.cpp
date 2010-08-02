@@ -416,6 +416,7 @@ namespace game
         changemap(name, m_valid(nextmode) ? nextmode : (remote ? lobbymode : localmode));
     }
     ICOMMAND(map, "s", (char *name), changemap(name));
+	ICOMMAND(quasimap, "s", (char *name), changemapserv(name, gamemode));
 
     void forceedit(const char *name)
     {

@@ -863,7 +863,7 @@ namespace game
 				if(players[i] == d || players[i]->state != CS_ALIVE || (isteam(d->team,players[i]->team) && quasiattackteamkill == 0) || !intersect(d,d->o,players[i]->o)) continue;
 				if( pdist < dist) { //select closest
 					ai::getyawpitch(d->o,players[i]->o,yaw,pitch);
-					if(!ai::getsight(d->headpos(), yaw, pitch, players[i]->headpos(), target, pdist, float(quasiaimbotfov),float(quasiaimbotfov))) continue;
+					if(!ai::getsight(d->o, yaw, pitch, players[i]->o, target, pdist, float(quasiaimbotfov),float(quasiaimbotfov))) continue;
 					if(yaw < 0) yaw += 360;
 					yawang = min(max(d->yaw,yaw) - min(d->yaw,yaw),360 - max(d->yaw,yaw) + min(d->yaw,yaw));
 					pitchang = fabs(pitch - d->pitch);

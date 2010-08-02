@@ -120,8 +120,9 @@ namespace game
         return numgroups;
     }
 
-	VARP(quasishowfrags,0,0,1);
-	VARP(quasishowaccuracy,0,0,1);
+	VAR(quasishowfrags,0,0,1);
+	VAR(quasishowaccuracy,0,0,1);
+	VAR(quasishowdeaths,0,0,1);
     void renderscoreboard(g3d_gui &g, bool firstpass)
     {
         const ENetAddress *address = connectedpeer();
@@ -219,8 +220,16 @@ namespace game
                 loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
                 g.poplist();
             }
+			if(quasishowdeaths == 1)
+			{
+				g.pushlist();
+                g.strut(7);
+                g.text("deaths", fgcolor);
+                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->deaths));
+                g.poplist();
+			}
 
-			if(!cmode || !cmode->hidefrags() || quasishowaccuracy == 1)
+			if(quasishowaccuracy == 1)
             { 
                 g.pushlist();
                 g.strut(7);
@@ -228,7 +237,6 @@ namespace game
                 loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, (o->totaldamage*100)/max(o->totalshots, 1)));
                 g.poplist();
             }
-
             if(multiplayer(false) || demoplayback)
             {
                 if(showpj)

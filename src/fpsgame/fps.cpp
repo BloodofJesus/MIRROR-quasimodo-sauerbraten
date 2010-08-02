@@ -909,7 +909,7 @@ namespace game
 
 	VAR(quasinameplayers,0,0,1);
 	VAR(quasiscoreenabled,0,0,1);
-	fpsent *j,*t;
+	fpsent *j,*t,*o;
     void gameplayhud(int w, int h)
     {
         glPushMatrix();
@@ -920,7 +920,9 @@ namespace game
 		if(quasileapon) draw_text("LEAP", 0, (1800-ph)/2);
 		else if(quasinameplayers == 1 && j && j->state == CS_ALIVE && j->type == ENT_PLAYER) draw_text(j->name, 0, (1800-ph)/2); //CS_ALIVE and ENT_PLAYER make sure that j has not been disallocated.
         if(quasiscoreenabled == 1){
-			draw_textf("frags: %d deaths: %d shots: %d accuracy: %d kpd: %d",0,350,player1->frags, player1->deaths, player1->totalshots,(player1->totaldamage*100)/max(player1->totalshots, 1),player1->frags/max(player1->deaths,1));
+			o = followingplayer();
+			if(!o) o = player1;
+			draw_textf("frags: %d deaths: %d shots: %d accuracy: %d kpd: %f",0,350,o->frags, o->deaths, o->totalshots,(o->totaldamage*100)/max(o->totalshots, 1),o->frags/max(o->deaths,1));
 		}
 		if(player1->state == CS_SPECTATOR && !quasileapon) {
 			text_bounds("SPECTATOR", tw, th);

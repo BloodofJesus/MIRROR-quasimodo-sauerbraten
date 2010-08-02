@@ -1213,6 +1213,7 @@ namespace game
                 int prevaction = s->lastaction;
                 s->lastaction = lastmillis;
                 s->lastattackgun = s->gunselect;
+				s->totalshots += guns[gun].damage;
                 shoteffects(gun, from, to, s, false, id, prevaction);
                 break;
             }
@@ -1238,6 +1239,7 @@ namespace game
                 target->armour = armour;
                 target->health = health;
                 if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
+				actor->totaldamage += damage;
                 damaged(damage, target, actor, false);
                 break;
             }
@@ -1265,6 +1267,7 @@ namespace game
                     particle_textcopy(actor->abovehead(), ds, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 }
                 if(!victim) break;
+				victim->deaths++;
                 killed(victim, actor);
                 break;
             }

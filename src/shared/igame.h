@@ -68,6 +68,8 @@ namespace game
     extern void doattack(bool on);
 	extern void doleap(bool on);
 	extern void doleaptoggle();
+	extern void quasialive();
+	extern void quasidead();
 	extern void quasitelesetdest();
 	extern void quasitelegotodest();
 	extern void quasidoattack(bool on);

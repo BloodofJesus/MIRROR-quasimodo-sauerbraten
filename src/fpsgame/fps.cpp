@@ -358,6 +358,8 @@ namespace game
 	VAR(quasileaptoggle,0,0,1);
 	ICOMMAND(leap, "D", (int *down), { doleap(*down!=0); });
 	ICOMMAND(leaptoggle, "", (), doleaptoggle());
+	ICOMMAND(quasidead, "", (), quasidead());
+	ICOMMAND(quasialive, "", (), quasialive());
 	uchar prevstate;
 	bool quasileapon = false;
 	void doleap(bool on)
@@ -373,6 +375,14 @@ namespace game
 			else { player1->state = prevstate; }
 			quasileapon = !quasileapon;
 		}
+	}
+	void quasialive() {
+		quasileapon = false;
+		player1->state = CS_ALIVE;
+	}
+	void quasidead() {
+		quasileapon = false;
+		player1->state = CS_DEAD;
 	}
 	VAR(quasitriggerbotmode,0,0,1);
 	VAR(quasiaimbotmode,0,0,1);

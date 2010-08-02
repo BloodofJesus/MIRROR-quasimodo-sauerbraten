@@ -668,6 +668,7 @@ namespace game
     extern fpsent *newclient(int cn);
     extern const char *colorname(fpsent *d, const char *name = NULL, const char *prefix = "");
     extern fpsent *pointatplayer();
+	extern fpsent *playerpointat();
     extern fpsent *hudplayer();
     extern fpsent *followingplayer();
     extern void stopfollowing();
@@ -727,6 +728,7 @@ namespace game
 
     // weapon
     extern void shoot(fpsent *d, const vec &targ);
+	extern void quasidanger(vec loct);
 	extern int quasishootdelay,quasishootms;
 	extern void quasishoot(fpsent *d, const vec &targ);
     extern void shoteffects(int gun, const vec &from, const vec &to, fpsent *d, bool local, int id, int prevaction);

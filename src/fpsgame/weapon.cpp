@@ -390,6 +390,11 @@ namespace game
             }
         }
     }
+	void quasidanger(vec loct)
+	{
+		//damagecompass(1, loct);
+		quasidangercompass(-50, loct);
+	}
 
     void hitpush(int damage, dynent *d, fpsent *at, vec &from, vec &to, int gun, int rays)
     {
@@ -1030,6 +1035,7 @@ namespace game
         removeprojectiles(d);
     }
 
+	VAR(quasidangerenabled,0,0,1);
     void updateweapons(int curtime)
     {
 		extern vec triggerbotlockaim;
@@ -1038,6 +1044,8 @@ namespace game
 			shoot(player1, worldpos);
 			quasishoot(player1,worldpos);
 		}
+		fpsent * a = playerpointat();
+		if(quasidangerenabled == 1 && a) {quasidanger(a->o); conoutf(CON_GAMEINFO,"Danger: %s",a->name);}
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();
         if(!following) following = player1;

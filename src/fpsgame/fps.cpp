@@ -113,6 +113,19 @@ namespace game
         return NULL;
     }
 
+	fpsent *playerpointat()
+    {
+		vec targ,oworldpos;
+		int worldsize = getworldsize();
+        loopv(players)
+		{
+			vecfromyawpitch(players[i]->yaw, players[i]->pitch, 1, 0, targ);
+			oworldpos = vec(targ).mul(2*worldsize).add(camera1->o);
+			if(players[i] != player1 && intersect(player1, players[i]->o, oworldpos)) return players[i];
+		}
+        return NULL;
+    }
+
     void stopfollowing()
     {
         if(following<0) return;
@@ -905,7 +918,7 @@ namespace game
 		text_bounds("  ", pw, ph);
 		if(t=pointatplayer()) j = t;
 		if(quasileapon) draw_text("LEAP", 0, (1800-ph)/2);
-		else if(quasinameplayers == 1 && j) draw_text(j->name, 0, (1800-ph)/2);
+		else if(quasinameplayers == 1 && j && j->state == CS_ALIVE && j->type == ENT_PLAYER) draw_text(j->name, 0, (1800-ph)/2); //CS_ALIVE and ENT_PLAYER make sure that j has not been disallocated.
         if(quasiscoreenabled == 1){
 			draw_textf("frags: %d deaths: %d shots: %d accuracy: %d kpd: %d",0,350,player1->frags, player1->deaths, player1->totalshots,(player1->totaldamage*100)/max(player1->totalshots, 1),player1->frags/max(player1->deaths,1));
 		}

@@ -537,6 +537,21 @@ struct ctfclientmode : clientmode
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
             drawblip(d, x, y, s, i, true);
         }
+		if(quasiradarshowplayers == 1)
+		{
+			settexture("packages/hud/dot_red.png", 3);
+			loopv(players)
+			{
+				if(players[i] != player1 && !isteam(players[i]->team,player1->team) && players[i]->state == CS_ALIVE)drawblip(d, x, y, s, players[i]->o, false);
+			}
+
+			settexture("packages/hud/dot_blue.png", 3);
+			loopv(players)
+			{
+				if(players[i] != player1 && isteam(players[i]->team,player1->team) && players[i]->state == CS_ALIVE) drawblip(d, x, y, s, players[i]->o, false);
+			}
+		}
+
         if(d->state == CS_DEAD && (m_efficiency || !m_protect))
         {
             int wait = respawnwait(d);

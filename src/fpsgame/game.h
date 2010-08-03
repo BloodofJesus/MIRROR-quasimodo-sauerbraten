@@ -621,6 +621,7 @@ namespace entities
 
 namespace game
 {
+	extern int quasiradarshowplayers;
     struct clientmode
     {
         virtual ~clientmode() {}

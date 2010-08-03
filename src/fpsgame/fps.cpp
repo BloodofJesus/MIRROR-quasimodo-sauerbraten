@@ -179,6 +179,7 @@ namespace game
 
     VARP(smoothmove, 0, 75, 100);
     VARP(smoothdist, 0, 32, 64);
+	VAR(quasiradarshowplayers,0,0,1);
 
     void predictplayer(fpsent *d, bool move)
     {

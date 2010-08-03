@@ -1047,7 +1047,7 @@ namespace game
 			quasishoot(player1,worldpos);
 		}
 		fpsent * a = playerpointat();
-		if(quasidangerenabled == 1 && a) {quasidanger(a->o); conoutf(CON_GAMEINFO,"Danger: %s",a->name);}
+		if(quasidangerenabled == 1 && a && a->state == CS_ALIVE && a != player1 && followingplayer() != a && !isteam(a->team,player1->team)) {quasidanger(a->o); conoutf(CON_GAMEINFO,"Danger: %s",a->name);}
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();
         if(!following) following = player1;

@@ -1967,12 +1967,12 @@ void quasidrawdangercompass(int w, int h)
         if(!dirs)
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glColor4f(0, 0, 1, 0.3f);
+            glColor4f(0, 0, 1, 0.2f);
         }
         dirs++;
 
         glPushMatrix();
-        glTranslatef(w/2, h/2, 0);
+        glTranslatef(w, h, 0);
         glRotatef(i*45, 0, 0, 1);
         glTranslatef(0, -size/2.0f-min(h, w)/4.0f, 0);
         float logscale = 32,

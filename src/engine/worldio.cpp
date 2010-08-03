@@ -13,6 +13,7 @@ void backup(char *name, char *backupname)
 string ogzname, bakname, cfgname, picname;
 
 VARP(savebak, 0, 2, 2);
+int qmapnocrc = 0;
 
 void cutogz(char *s)
 {
@@ -816,7 +817,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     if(hdr.version >= 25 && hdr.numpvs > 0) loadpvs(f, hdr.numpvs);
     if(hdr.version >= 28 && hdr.blendmap) loadblendmap(f, hdr.blendmap);
 
-    mapcrc = f->getcrc();
+	if(qmapnocrc == 0 || mapcrc == 0) mapcrc = f->getcrc();
+	else qmapnocrc = 0;
     delete f;
 
     conoutf("read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);

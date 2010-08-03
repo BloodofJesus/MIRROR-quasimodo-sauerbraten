@@ -1239,7 +1239,7 @@ namespace game
                 if(!target || !actor) break;
                 target->armour = armour;
                 target->health = health;
-				if(player1->health < 0 && quasileapon) doleaptoggle();
+				if(player1->health < 0 && quasileapon) {doleaptoggle(); player1->state = CS_DEAD;}
                 if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
 				if(actor != player1) actor->totaldamage += damage;
                 damaged(damage, target, actor, false);

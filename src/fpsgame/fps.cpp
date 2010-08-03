@@ -380,13 +380,13 @@ namespace game
 	{
 		if(quasileapenabled == 1 && quasileaptoggle == 0) {
 			if(on) { prevstate = player1->state; player1->state = CS_SPECTATOR; quasileapon = true;}
-			else { player1->state = prevstate; quasileapon = false;}
+			else { player1->state = prevstate; quasileapon = false; stopfollowing();}
 		}
 	}
 	void doleaptoggle() {
 		if(quasileapenabled == 1 && quasileaptoggle == 1) {
 			if(!quasileapon) { prevstate = player1->state; player1->state = CS_SPECTATOR; }
-			else { player1->state = prevstate; }
+			else { player1->state = prevstate; stopfollowing();}
 			quasileapon = !quasileapon;
 		}
 	}
@@ -781,7 +781,7 @@ namespace game
     }
     ICOMMAND(kill, "", (), suicide(player1));
 
-    bool needminimap() { return m_ctf || m_protect || m_hold || m_capture; }
+	bool needminimap() { return m_ctf || m_protect || m_hold || m_capture || true; }
 
     void drawicon(int icon, float x, float y, float sz)
     {

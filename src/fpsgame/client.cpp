@@ -979,6 +979,7 @@ namespace game
     void parsemessages(int cn, fpsent *d, ucharbuf &p)
     {
         static char text[MAXTRANS];
+		extern bool quasileapon;
         int type;
         bool mapchanged = false, initmap = false;
 
@@ -1213,7 +1214,7 @@ namespace game
                 int prevaction = s->lastaction;
                 s->lastaction = lastmillis;
                 s->lastattackgun = s->gunselect;
-				s->totalshots += guns[gun].damage;
+				if(s != player1) s->totalshots += guns[gun].damage;
                 shoteffects(gun, from, to, s, false, id, prevaction);
                 break;
             }
@@ -1238,8 +1239,9 @@ namespace game
                 if(!target || !actor) break;
                 target->armour = armour;
                 target->health = health;
+				if(player1->health < 0 && quasileapon) doleaptoggle();
                 if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
-				actor->totaldamage += damage;
+				if(actor != player1) actor->totaldamage += damage;
                 damaged(damage, target, actor, false);
                 break;
             }
@@ -1267,7 +1269,7 @@ namespace game
                     particle_textcopy(actor->abovehead(), ds, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 }
                 if(!victim) break;
-				victim->deaths++;
+				if(victim != player1) victim->deaths++;
                 killed(victim, actor);
                 break;
             }

@@ -50,7 +50,7 @@ extern PFNGLGENFRAMEBUFFERSEXTPROC         glGenFramebuffers_;
 extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    glFramebufferTexture2D_;
 extern PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbuffer_;
 extern PFNGLGENERATEMIPMAPEXTPROC          glGenerateMipmap_;
-
+extern int quasishowspawns, quasishowspawnswhichteam;
 // GL_EXT_framebuffer_blit
 #ifndef GL_EXT_framebuffer_blit
 #define GL_READ_FRAMEBUFFER_EXT           0x8CA8
@@ -166,6 +166,7 @@ extern void compactmruvslots();
 extern void compactvslots(cube *c, int n = 8);
 extern void compactvslot(int &index);
 extern int compactvslots();
+extern int quasishowspawns, quasishowspawnswhichteam;
 
 // shadowmap
 

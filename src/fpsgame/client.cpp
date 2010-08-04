@@ -975,7 +975,6 @@ namespace game
     }
 
     extern int deathscore;
-
     void parsemessages(int cn, fpsent *d, ucharbuf &p)
     {
         static char text[MAXTRANS];
@@ -1540,6 +1539,7 @@ namespace game
                 fpsent *w = getclient(wn);
                 if(!w) return;
                 filtertext(w->team, text, false, MAXTEAMLEN);
+				if(w == player1) setvar("quasishowspawnswhichteam",ctfteamflag(w->team));
                 static const char *fmt[2] = { "%s switched to team %s", "%s forced to team %s"};
                 if(reason >= 0 && size_t(reason) < sizeof(fmt)/sizeof(fmt[0]))
                     conoutf(fmt[reason], colorname(w), w->team);

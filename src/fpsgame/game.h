@@ -4,7 +4,7 @@
 #include "cube.h"
 
 // console message types
-
+extern int quasishowspawns, quasishowspawnswhichteam;
 enum
 {
     CON_CHAT       = 1<<8,

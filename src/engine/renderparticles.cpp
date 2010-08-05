@@ -1425,8 +1425,7 @@ void seedparticles()
         pe.finalize();
     }
 }
-VAR(quasishowspawns,0,0,1);
-VAR(quasishowspawnswhichteam,0,0,2);
+
 void updateparticles()
 {
     if(regenemitters) addparticleemitters();
@@ -1469,37 +1468,9 @@ void updateparticles()
         }
         if(dbgpcull && (canemit || replayed) && addedparticles) conoutf(CON_DEBUG, "%d emitters, %d particles", emitted, addedparticles);
     }
-	const vector<extentity *> &ents = entities::getents();
-	if(!editmode && quasishowspawns == 1)
-	{
-		if(quasishowspawnswhichteam == 1)
-		loopv(ents)
-		{
-			entity &e = *ents[i];
-			if(e.type != ET_PLAYERSTART) continue;
-			//regular_particle_splash(PART_EXPLOSION_BLUE, 2, 40000, e.o, 0xFF0000, 0.32f*particlesize/100.0f);
-			if(e.attr2 > 0 && quasishowspawnswhichteam > 0)
-			{
-				if(quasishowspawnswhichteam == 1)
-				{
-					if(e.attr2 == 1) particle_fireball(e.o,1.0f,PART_EXPLOSION_BLUE, 5, 0x0000FF, 1.0f);
-					if(e.attr2 == 2) particle_fireball(e.o,1.0f,PART_EXPLOSION, 5, 0xFF0000, 1.0f);
-				}
-				else
-				{
-					if(e.attr2 == 1) particle_fireball(e.o,1.0f,PART_EXPLOSION, 5, 0xFF0000, 1.0f);
-					if(e.attr2 == 2) particle_fireball(e.o,1.0f,PART_EXPLOSION_BLUE, 5, 0x0000FF, 1.0f);
-				}
-			}
-			else if(quasishowspawnswhichteam == 0)
-			{
-				particle_fireball(e.o,1.0f,PART_EXPLOSION_BLUE, 5, 0x00FF00, 1.0f);
-			}
-		}
-
-	}
     if(editmode) // show sparkly thingies for map entities in edit mode
     {
+        const vector<extentity *> &ents = entities::getents();
         // note: order matters in this case as particles of the same type are drawn in the reverse order that they are added
         loopv(entgroup)
         {

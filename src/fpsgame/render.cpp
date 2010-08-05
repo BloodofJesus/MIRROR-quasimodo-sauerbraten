@@ -175,14 +175,12 @@ namespace game
             a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
         const char *mdlname = mdl.ffa;
-		const char *ghostmdlname = mdl.ffa;
-		bool ghost = true;
         switch(testteam ? testteam-1 : team)
         {
-		case 1: mdlname = mdl.blueteam; ghost = false; ghostmdlname = mdl.blueteam; break;
+            case 1: mdlname = mdl.blueteam; break;
             case 2: mdlname = mdl.redteam; break;
         }
-        renderclient(d, mdlname, a[0].tag ? a : NULL, hold, attack, delay, lastaction, intermission && d->state!=CS_DEAD ? 0 : d->lastpain, fade, ragdoll && mdl.ragdoll, ghost, ghostmdlname);
+        renderclient(d, mdlname, a[0].tag ? a : NULL, hold, attack, delay, lastaction, intermission && d->state!=CS_DEAD ? 0 : d->lastpain, fade, ragdoll && mdl.ragdoll);
 #if 0
         if(d->state!=CS_DEAD && d->quadmillis) 
         {

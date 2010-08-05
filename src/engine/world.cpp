@@ -1038,7 +1038,6 @@ void findplayerspawn(dynent *d, int forceent, int tag)   // place at random spaw
         loopi(r) spawncycle = findentity(ET_PLAYERSTART, spawncycle+1, -1, tag);
         pick = spawncycle;
     }
-	//conoutf(CON_WARN, "findplayerspawn %i", pick);
     if(pick!=-1)
     {
         d->pitch = 0;

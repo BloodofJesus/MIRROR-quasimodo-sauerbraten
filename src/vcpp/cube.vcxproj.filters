@@ -2,37 +2,37 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Engine">
-      <UniqueIdentifier>{aceb5c60-4f22-46ec-84b1-e932e94d1455}</UniqueIdentifier>
+      <UniqueIdentifier>{2d46cd80-c528-43a5-bc0c-3ff77670b8b5}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
     <Filter Include="Engine\world">
-      <UniqueIdentifier>{319d6021-fb0c-4887-ba35-bbcd32fd2440}</UniqueIdentifier>
+      <UniqueIdentifier>{b39e252d-4661-4b50-a377-200aa5dd9002}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\cs">
-      <UniqueIdentifier>{a2f31d55-bbd4-4cf0-8406-a6959df7e2eb}</UniqueIdentifier>
+      <UniqueIdentifier>{85197c1e-b6a3-45ec-9648-cefb5487536b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\render">
-      <UniqueIdentifier>{aa8cbb8d-0e92-41c2-b319-92acca443354}</UniqueIdentifier>
+      <UniqueIdentifier>{e2d3d458-7ed7-48df-8ff2-917bd0f4c396}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\system">
-      <UniqueIdentifier>{23eb6e68-1a15-43f7-8a6a-575e37c58a4f}</UniqueIdentifier>
+      <UniqueIdentifier>{4d3d3905-53d3-4a35-bd48-a9a74847e017}</UniqueIdentifier>
     </Filter>
     <Filter Include="Common">
-      <UniqueIdentifier>{86be4f1c-2ca1-483e-bed6-abd398e07ff6}</UniqueIdentifier>
+      <UniqueIdentifier>{6d4eefa2-45ec-49a9-be19-ced1524b08eb}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
     <Filter Include="Common\text">
-      <UniqueIdentifier>{919cd32f-2f7c-47c0-92f1-4b77f05636c9}</UniqueIdentifier>
+      <UniqueIdentifier>{43d9bedf-9a54-488d-9e51-d331de8ccfa3}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
     <Filter Include="Common\text\docs">
-      <UniqueIdentifier>{dc6fe87f-4e77-4bd8-ab96-440993d805aa}</UniqueIdentifier>
+      <UniqueIdentifier>{e4af6364-a2f3-4aab-b545-a8b9a4d6312c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Common\text\cfg">
-      <UniqueIdentifier>{0545dbad-4c63-4fbf-9e3d-1c6f738e317a}</UniqueIdentifier>
+      <UniqueIdentifier>{596f4dee-ed16-415a-9f9c-b123325df62d}</UniqueIdentifier>
     </Filter>
     <Filter Include="FPS">
-      <UniqueIdentifier>{5d0c239f-ca2d-447b-b872-90f88c13cbaf}</UniqueIdentifier>
+      <UniqueIdentifier>{142d2b83-8713-403d-81f8-2fe111022d62}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

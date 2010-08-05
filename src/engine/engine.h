@@ -50,7 +50,7 @@ extern PFNGLGENFRAMEBUFFERSEXTPROC         glGenFramebuffers_;
 extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    glFramebufferTexture2D_;
 extern PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbuffer_;
 extern PFNGLGENERATEMIPMAPEXTPROC          glGenerateMipmap_;
-extern int quasishowspawns, quasishowspawnswhichteam;
+
 // GL_EXT_framebuffer_blit
 #ifndef GL_EXT_framebuffer_blit
 #define GL_READ_FRAMEBUFFER_EXT           0x8CA8
@@ -166,7 +166,6 @@ extern void compactmruvslots();
 extern void compactvslots(cube *c, int n = 8);
 extern void compactvslot(int &index);
 extern int compactvslots();
-extern int quasishowspawns, quasishowspawnswhichteam;
 
 // shadowmap
 
@@ -393,7 +392,6 @@ extern bool depthfxing;
 
 extern void drawdepthfxtex();
 
-
 // server
 extern vector<const char *> gameargs;
 
@@ -465,7 +463,6 @@ extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
 
 extern float loadprogress;
-extern int qmapnocrc;
 extern void renderbackground(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, const char *mapinfo = NULL, bool restore = false, bool force = false);
 extern void renderprogress(float bar, const char *text, GLuint tex = 0, bool background = false);
 

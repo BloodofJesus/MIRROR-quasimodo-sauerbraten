@@ -537,21 +537,6 @@ struct ctfclientmode : clientmode
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
             drawblip(d, x, y, s, i, true);
         }
-		if(quasiradarshowplayers == 1)
-		{
-			settexture("packages/hud/dot_red.png", 3);
-			loopv(players)
-			{
-				if(players[i] != player1 && !isteam(players[i]->team,player1->team) && players[i]->state == CS_ALIVE)drawblip(d, x, y, s, players[i]->o, false);
-			}
-
-			settexture("packages/hud/dot_blue.png", 3);
-			loopv(players)
-			{
-				if(players[i] != player1 && isteam(players[i]->team,player1->team) && players[i]->state == CS_ALIVE) drawblip(d, x, y, s, players[i]->o, false);
-			}
-		}
-
         if(d->state == CS_DEAD && (m_efficiency || !m_protect))
         {
             int wait = respawnwait(d);
@@ -602,7 +587,6 @@ struct ctfclientmode : clientmode
 
     void rendergame()
     {
-		extern int quasiwallhackflags;
         loopv(flags)
         {
             flag &f = flags[i];
@@ -611,7 +595,7 @@ struct ctfclientmode : clientmode
             const char *flagname = m_hold && (!f.owner || lastmillis%1000 < 500) ? "flags/neutral" : (m_hold ? ctfteamflag(f.owner->team) : f.team)==ctfteamflag(player1->team) ? "flags/blue" : "flags/red";
             float angle;
             vec pos = interpflagpos(f, angle);
-            if(m_hold || quasiwallhackflags == 1)
+            if(m_hold)
                 rendermodel(!f.droptime && !f.owner ? &f.light : NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
                         pos, angle, 0,
                         MDL_GHOST | MDL_CULL_VFC | (f.droptime || f.owner ? MDL_LIGHT : 0),

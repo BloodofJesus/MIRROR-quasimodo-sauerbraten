@@ -1655,16 +1655,6 @@ VAR(floatspeed, 10, 100, 1000);
 
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
-	extern int quasiflymodefloorjumptoggle,quasiflymodeenabled,quasijumpcount,quasiflymodefloorjumpcount;
-	//if the player tries to jump whilst falling make note of it
-	if(quasiflymodefloorjumptoggle == 1 && pl->state != ENT_AI && pl->physstate == PHYS_FALL && pl->jumping && local) {
-		quasijumpcount++;
-		pl->jumping = false;
-		if(quasijumpcount >= quasiflymodefloorjumpcount) {
-			quasijumpcount = 0;
-			quasiflymodeenabled = 1;
-		}
-	}
     if(floating)
     {
         if(pl->jumping)
@@ -1750,14 +1740,6 @@ void modifygravity(physent *pl, bool water, int curtime)
     }
 }
 
-VAR(quasiflymodeenabled,0,0,1);
-VAR(quasiflymodenoclip,0,0,1);
-VAR(quasiflymodefloorjumptoggle,0,0,1);
-VARP(quasiflymodefloorjumpcount,1,2,4);
-int quasijumpcount = 0;
-
-//Layaway function
-VAR(quasienhancedwatermovement,0,0,1);
 // main physics routine, moves a player/monster for a curtime step
 // moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 // local is false for multiplayer prediction
@@ -1767,51 +1749,30 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
     int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->eyeheight)/4));
     bool water = isliquid(material&MATF_VOLUME);
     bool floating = pl->type==ENT_PLAYER && (pl->state==CS_EDITING || pl->state==CS_SPECTATOR);
-	if(quasiflymodeenabled == 1) floating = true;
     float secs = curtime/1000.f;
 
     // apply gravity
-	if(!water) {
-		if(!floating) modifygravity(pl, water, curtime);
-	} else {
-		if(quasienhancedwatermovement == 0) modifygravity(pl, water, curtime);
-	}
+    if(!floating) modifygravity(pl, water, curtime);
     // apply any player generated changes in velocity
     modifyvelocity(pl, local, water, floating, curtime);
 
     vec d(pl->vel), oldpos(pl->o);
-    if(!floating && water && quasienhancedwatermovement == 0) d.mul(0.5f);
+    if(!floating && water) d.mul(0.5f);
     d.add(pl->falling);
     d.mul(secs);
 
     pl->blocked = false;
-	if(quasiflymodefloorjumptoggle == 1 && pl->type != ENT_AI && (pl->physstate >= PHYS_FLOOR || pl->state == CS_DEAD)) {
-		quasiflymodeenabled = 0; //On the floor so disable fly mode.
-		quasijumpcount = 0; //Player landed so reset jump count.
-	}
-    if(floating && (quasiflymodeenabled == 0 || quasiflymodenoclip == 1))                // just apply velocity
+
+    if(floating)                // just apply velocity
     {
         if(pl->physstate != PHYS_FLOAT)
         {
-			if(quasiflymodeenabled == 0) pl->physstate = PHYS_FLOAT;
+            pl->physstate = PHYS_FLOAT;
             pl->timeinair = 0;
             pl->falling = vec(0, 0, 0);
         }
         pl->o.add(d);
     }
-	else if(quasiflymodeenabled == 1) // apply velocity with collision
-	{
-		if(pl->physstate != PHYS_FLOAT)
-        {
-            pl->timeinair = 0;
-            pl->falling = vec(0, 0, 0);
-        }
-		const float f = 1.0f/moveres;
-        int collisions = 0;
-
-        d.mul(f);
-        loopi(moveres) if(!move(pl, d) && ++collisions<5) i--; // discrete steps collision detection & sliding
-	}
     else                        // apply velocity with collision
     {
         const float f = 1.0f/moveres;
@@ -2133,7 +2094,6 @@ dir(right,    strafe, -1, k_right, k_left);
 
 ICOMMAND(jump,   "D", (int *down), { if(!*down || game::canjump()) player->jumping = *down!=0; });
 ICOMMAND(attack, "D", (int *down), { game::doattack(*down!=0); });
-ICOMMAND(quasiattack, "D", (int *down), { game::quasidoattack(*down!=0); });
 
 bool entinmap(dynent *d, bool avoidplayers)        // brute force but effective way to find a free spawn spot in the map
 {

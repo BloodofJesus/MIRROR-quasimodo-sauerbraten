@@ -5,7 +5,6 @@ namespace game
     VARP(minradarscale, 0, 384, 10000);
     VARP(maxradarscale, 1, 1024, 10000);
     FVARP(minimapalpha, 0, 1, 1);
-	VAR(quasiwallhackflags,0,0,1);
 
     #include "capture.h"
     #include "ctf.h"
@@ -416,7 +415,6 @@ namespace game
         changemap(name, m_valid(nextmode) ? nextmode : (remote ? lobbymode : localmode));
     }
     ICOMMAND(map, "s", (char *name), changemap(name));
-	ICOMMAND(quasimap, "s", (char *name), {extern int qmapnocrc; qmapnocrc = 1; changemapserv(name, gamemode);});
 
     void forceedit(const char *name)
     {
@@ -975,10 +973,10 @@ namespace game
     }
 
     extern int deathscore;
+
     void parsemessages(int cn, fpsent *d, ucharbuf &p)
     {
         static char text[MAXTRANS];
-		extern bool quasileapon;
         int type;
         bool mapchanged = false, initmap = false;
 
@@ -1213,7 +1211,6 @@ namespace game
                 int prevaction = s->lastaction;
                 s->lastaction = lastmillis;
                 s->lastattackgun = s->gunselect;
-				if(s != player1) s->totalshots += guns[gun].damage;
                 shoteffects(gun, from, to, s, false, id, prevaction);
                 break;
             }
@@ -1238,9 +1235,7 @@ namespace game
                 if(!target || !actor) break;
                 target->armour = armour;
                 target->health = health;
-				if(player1->health < 0 && quasileapon) {doleaptoggle(); player1->state = CS_DEAD;}
                 if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
-				if(actor != player1) actor->totaldamage += damage;
                 damaged(damage, target, actor, false);
                 break;
             }
@@ -1268,7 +1263,6 @@ namespace game
                     particle_textcopy(actor->abovehead(), ds, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 }
                 if(!victim) break;
-				if(victim != player1) victim->deaths++;
                 killed(victim, actor);
                 break;
             }
@@ -1539,7 +1533,6 @@ namespace game
                 fpsent *w = getclient(wn);
                 if(!w) return;
                 filtertext(w->team, text, false, MAXTEAMLEN);
-				if(w == player1) setvar("quasishowspawnswhichteam",ctfteamflag(w->team));
                 static const char *fmt[2] = { "%s switched to team %s", "%s forced to team %s"};
                 if(reason >= 0 && size_t(reason) < sizeof(fmt)/sizeof(fmt[0]))
                     conoutf(fmt[reason], colorname(w), w->team);

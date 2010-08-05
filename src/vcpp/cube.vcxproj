@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>sauerbraten</ProjectName>
+    <ProjectName>Quasimodo</ProjectName>
     <ProjectGuid>{06594C6D-6DA9-49DC-9A91-8F47221DDCFD}</ProjectGuid>
     <RootNamespace>sauerbraten</RootNamespace>
   </PropertyGroup>

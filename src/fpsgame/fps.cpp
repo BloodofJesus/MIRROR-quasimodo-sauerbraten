@@ -113,19 +113,6 @@ namespace game
         return NULL;
     }
 
-	fpsent *playerpointat()
-    {
-		vec targ,oworldpos;
-		int worldsize = getworldsize();
-        loopv(players)
-		{
-			vecfromyawpitch(players[i]->yaw, players[i]->pitch, 1, 0, targ);
-			oworldpos = vec(targ).mul(2*worldsize).add(camera1->o);
-			if(players[i] != player1 && intersect(player1, players[i]->o, oworldpos)) return players[i];
-		}
-        return NULL;
-    }
-
     void stopfollowing()
     {
         if(following<0) return;
@@ -179,7 +166,6 @@ namespace game
 
     VARP(smoothmove, 0, 75, 100);
     VARP(smoothdist, 0, 32, 64);
-	VAR(quasiradarshowplayers,0,0,1);
 
     void predictplayer(fpsent *d, bool move)
     {
@@ -302,8 +288,6 @@ namespace game
     }
 
     VARP(spawnwait, 0, 0, 1000);
-	VAR(quasiinstantrespawn,0,0,1);
-	int quasirespawnok = 0;
 
     void respawn()
     {
@@ -311,19 +295,14 @@ namespace game
         {
             player1->attacking = false;
             int wait = cmode ? cmode->respawnwait(player1) : 0;
-            if(wait>0 && quasirespawnok == 0)
+            if(wait>0)
             {
-				if(quasiinstantrespawn == 1) {
-					conoutf(CON_GAMEINFO, "\f1Quasimodo: \f3CLICK AGAIN TO SKIP THE RESPAWN TIMER");
-					quasirespawnok += 1;
-				}
                 lastspawnattempt = lastmillis;
                 //conoutf(CON_GAMEINFO, "\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
                 return;
             }
-            if(lastmillis < player1->lastpain + spawnwait && quasirespawnok == 0) return;
+            if(lastmillis < player1->lastpain + spawnwait) return;
             if(m_dmsp) { changemap(clientmap, gamemode); return; }    // if we die in SP we try the same map again
-			quasirespawnok = 0;
             respawnself();
             if(m_classicsp)
             {
@@ -335,92 +314,11 @@ namespace game
 
     // inputs
 
-	ICOMMAND(quasiteleset, "", (), quasitelesetdest());
-	ICOMMAND(quasitelegoto, "", (), quasitelegotodest());
-	vec quasiteleo;
-	float quasitelepitch,quasiteleyaw;
-	int triggerbotms;
-	void quasitelesetdest()
-	{
-		quasiteleo = player1->o;
-		quasiteleyaw = player1->yaw;
-		quasitelepitch = player1->pitch;
-		conoutf(CON_GAMEINFO,"Set Destination: %f %f %f",quasiteleo.x,quasiteleo.y,quasiteleo.z);
-	}
-	void quasitelegotodest()
-	{
-		conoutf(CON_GAMEINFO,"Goto Destination: %f %f %f",quasiteleo.x,quasiteleo.y,quasiteleo.z);
-		player1->o = quasiteleo;
-		player1->yaw = quasiteleyaw;
-		player1->pitch = quasitelepitch;
-		entinmap(player1);
-        updatedynentcache(player1);
-	}
-	VAR(quasiattackbindtoattack,0,0,1);
-	int qattackassist,qattackdelay;
     void doattack(bool on)
     {
         if(intermission) return;
-        if(quasiattackbindtoattack == 1)
-		{
-			qattackassist = lastmillis;
-			if((player1->quasiattacking = on)) respawn();
-		}
-		else {if((player1->attacking = on)) respawn();}
+        if((player1->attacking = on)) respawn();
     }
-	VAR(quasileapenabled,0,0,1);
-	VAR(quasileaptoggle,0,0,1);
-	ICOMMAND(leap, "D", (int *down), { doleap(*down!=0); });
-	ICOMMAND(leaptoggle, "", (), doleaptoggle());
-	ICOMMAND(quasidead, "", (), quasidead());
-	ICOMMAND(quasialive, "", (), quasialive());
-	uchar prevstate;
-	bool quasileapon = false;
-	void doleap(bool on)
-	{
-		if(quasileapenabled == 1 && quasileaptoggle == 0) {
-			if(on) { prevstate = player1->state; player1->state = CS_SPECTATOR; quasileapon = true;}
-			else { player1->state = prevstate; quasileapon = false; stopfollowing();}
-		}
-	}
-	void doleaptoggle() {
-		if(quasileapenabled == 1 && quasileaptoggle == 1) {
-			if(!quasileapon) { prevstate = player1->state; player1->state = CS_SPECTATOR; }
-			else { player1->state = prevstate; stopfollowing();}
-			quasileapon = !quasileapon;
-		}
-	}
-	void quasialive() {
-		quasileapon = false;
-		player1->state = CS_ALIVE;
-	}
-	void quasidead() {
-		quasileapon = false;
-		player1->state = CS_DEAD;
-	}
-	VAR(quasitriggerbotmode,0,0,1);
-	VAR(quasiaimbotmode,0,0,1);
-	VARP(quasiaimbotfov,1,10,120);
-	VAR(quasiattackdelay,0,0,1);
-	VARP(quasiattackdelayms,5,250,3000);
-	VAR(quasiattackassist,0,0,1);
-	VARP(quasiattackassistms,5,500,3000);
-	VAR(quasiattackautoshoot,0,0,1);
-	VAR(quasiattackteamkill,0,0,1);
-	VAR(quasikickbackcancellation,0,0,1);
-	void quasidoattack(bool on)
-	{
-		if(intermission) return;
-		qattackassist = lastmillis;
-        if((player1->quasiattacking = on)) respawn();
-	}
-	/*void dotriggerbot(bool on)
-    {
-        if(intermission) return;
-		triggerbotlockaim = worldpos;
-		triggerbotms = lastmillis;
-		player1->triggerbot = on;
-    }*/
 
     bool canjump()
     {
@@ -781,7 +679,7 @@ namespace game
     }
     ICOMMAND(kill, "", (), suicide(player1));
 
-	bool needminimap() { return m_ctf || m_protect || m_hold || m_capture || true; }
+    bool needminimap() { return m_ctf || m_protect || m_hold || m_capture; }
 
     void drawicon(int icon, float x, float y, float sz)
     {
@@ -908,34 +806,23 @@ namespace game
         }
     }
 
-	VAR(quasinameplayers,0,0,1);
-	VAR(quasiscoreenabled,0,0,1);
-	fpsent *j,*t,*o;
     void gameplayhud(int w, int h)
     {
         glPushMatrix();
         glScalef(h/1800.0f, h/1800.0f, 1);
-		int pw, ph, tw, th, fw, fh, dw, dh;
-		text_bounds("  ", pw, ph);
-		if(t=pointatplayer()) j = t;
-		if(quasileapon) draw_text("LEAP", 0, (1800-ph)/2);
-		else if(quasinameplayers == 1 && j && j->state == CS_ALIVE && j->type == ENT_PLAYER) draw_text(j->name, 0, (1800-ph)/2); //CS_ALIVE and ENT_PLAYER make sure that j has not been disallocated.
-        if(quasiscoreenabled == 1){
-			o = followingplayer();
-			if(!o) o = player1;
-			draw_textf("frags: %d deaths: %d shots: %d accuracy: %d kpd: %f",0,350,o->frags, o->deaths, o->totalshots,(o->totaldamage*100)/max(o->totalshots, 1),o->frags/max(o->deaths,1));
-		}
-		if(player1->state == CS_SPECTATOR && !quasileapon) {
-			text_bounds("SPECTATOR", tw, th);
-		}
-        th = max(th, ph);
-        fpsent *f = followingplayer();
-        text_bounds(f ? colorname(f) : " ", fw, fh);
-        fh = max(fh, ph);
-		if(player1->state == CS_SPECTATOR && !quasileapon) {
-			draw_text("SPECTATOR", w*1800/h - tw - pw, 1650 - th - fh);
-		}
-        if(f) draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh);
+
+        if(player1->state==CS_SPECTATOR)
+        {
+            int pw, ph, tw, th, fw, fh;
+            text_bounds("  ", pw, ph);
+            text_bounds("SPECTATOR", tw, th);
+            th = max(th, ph);
+            fpsent *f = followingplayer();
+            text_bounds(f ? colorname(f) : " ", fw, fh);
+            fh = max(fh, ph);
+            draw_text("SPECTATOR", w*1800/h - tw - pw, 1650 - th - fh);
+            if(f) draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh);
+        }
 
         fpsent *d = hudplayer();
         if(d->state!=CS_EDITING)
@@ -969,9 +856,9 @@ namespace game
     int selectcrosshair(float &r, float &g, float &b)
     {
         fpsent *d = hudplayer();
-		if((d->state==CS_SPECTATOR && !quasileapon) || d->state==CS_DEAD) return -1;
+        if(d->state==CS_SPECTATOR || d->state==CS_DEAD) return -1;
 
-		if(d->state!=CS_ALIVE && !quasileapon) return 0;
+        if(d->state!=CS_ALIVE) return 0;
 
         int crosshair = 0;
         if(lasthit && lastmillis - lasthit < hitcrosshair) crosshair = 2;

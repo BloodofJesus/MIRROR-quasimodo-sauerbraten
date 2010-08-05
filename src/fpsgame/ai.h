@@ -278,8 +278,6 @@ namespace ai
     extern float viewfieldy(int x = 101);
     extern bool targetable(fpsent *d, fpsent *e);
     extern bool cansee(fpsent *d, vec &x, vec &y, vec &targ = aitarget);
-	extern void getyawpitch(const vec &from, const vec &pos, float &yaw, float &pitch);
-	extern bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy);
 
     extern void init(fpsent *d, int at, int on, int sk, int bn, int pm, const char *name, const char *team);
     extern void update();

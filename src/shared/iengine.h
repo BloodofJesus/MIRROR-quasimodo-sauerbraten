@@ -202,7 +202,6 @@ extern vec calcavatarpos(const vec &pos, float dist);
 
 extern void damageblend(int n);
 extern void damagecompass(int n, const vec &loc);
-extern void quasidangercompass(int n, const vec &loc);
 
 extern vec minimapcenter, minimapradius, minimapscale;
 extern void bindminimap();
@@ -255,7 +254,6 @@ extern bool load_world(const char *mname, const char *cname = NULL);
 extern bool save_world(const char *mname, bool nolms = false);
 extern void getmapfilenames(const char *fname, const char *cname, char *pakname, char *mapname, char *cfgname);
 extern uint getmapcrc();
-extern uint quasigetmapcrc();
 
 // physics
 extern void moveplayer(physent *pl, int moveres, bool local);
@@ -307,7 +305,7 @@ extern void endmodelbatches();
 extern void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw = 0, float pitch = 0, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, dynent *d = NULL, modelattach *a = NULL, int basetime = 0, int basetime2 = 0, float trans = 1);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
-extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false, bool ghost = false, const char *ghostmdlname = NULL);
+extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
 extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
 extern void setbbfrommodel(dynent *d, const char *mdl);
 extern const char *mapmodelname(int i);

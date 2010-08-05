@@ -2,8 +2,6 @@
 
 VARP(oqdynent, 0, 1, 1);
 VARP(animationinterpolationtime, 0, 150, 1000);
-VAR(quasiwallhackplayers,0,0,1);
-VAR(quasiwallhackplayersteam,0,0,1);
 
 model *loadingmodel = NULL;
 
@@ -1012,11 +1010,8 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
 VAR(animoverride, -1, 0, NUMANIMS-1);
 VAR(testanims, 0, 0, 1);
 VAR(testpitch, -90, 0, 90);
-VARP(quasiwallhacktransparency,0,50,100);
-VARP(quasithirdpersontransparency,0,50,100);
-VAR(quasithirdpersontransparencyenabled,0,0,1);
 
-void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll, bool ghost, const char *ghostmdlname)
+void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll)
 {
     int anim = hold ? hold : ANIM_IDLE|ANIM_LOOP;
     float yaw = testanims && d==player ? 0 : d->yaw+90,
@@ -1072,10 +1067,7 @@ void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int 
     else flags |= MDL_CULL_DIST;
     if(d->state==CS_LAGGED) fade = min(fade, 0.3f);
     else flags |= MDL_DYNSHADOW;
-	if(thirdperson > 0 && d==player && quasithirdpersontransparencyenabled == 1) fade = (float)quasithirdpersontransparency/100.0f;
     rendermodel(NULL, mdlname, anim, o, yaw, pitch, flags, d, attachments, basetime, 0, fade);
-	float alpha = (float)quasiwallhacktransparency/100.0f;
-	if((ghost || quasiwallhackplayersteam == 1)&& d->state == CS_ALIVE && quasiwallhackplayers == 1) rendermodel(NULL, ghostmdlname, anim, o, yaw, pitch, MDL_GHOST | MDL_CULL_VFC | MDL_LIGHT | MDL_FULLBRIGHT, d, attachments, basetime, 0, alpha);
 }
 
 void setbbfrommodel(dynent *d, const char *mdl)

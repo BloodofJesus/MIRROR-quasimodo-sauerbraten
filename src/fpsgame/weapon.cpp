@@ -390,11 +390,6 @@ namespace game
             }
         }
     }
-	void quasidanger(vec loct)
-	{
-		//damagecompass(1, loct);
-		quasidangercompass(-50, loct);
-	}
 
     void hitpush(int damage, dynent *d, fpsent *at, vec &from, vec &to, int gun, int rays)
     {
@@ -585,10 +580,6 @@ namespace game
 
     VARP(muzzleflash, 0, 1, 1);
     VARP(muzzlelight, 0, 1, 1);
-	VAR(quasitracer,0,0,1);
-	VARP(quasitracerred,0,64,255);
-	VARP(quasitracergreen,0,64,255);
-	VARP(quasitracerblue,0,64,255);
 
     void shoteffects(int gun, const vec &from, const vec &to, fpsent *d, bool local, int id, int prevaction)     // create visual effect from a shot
     {
@@ -651,8 +642,7 @@ namespace game
 
             case GUN_RIFLE:
                 particle_splash(PART_SPARK, 200, 250, to, 0xB49B4B, 0.24f);
-                if(quasitracer == 0) particle_trail(PART_SMOKE, 500, hudgunorigin(gun, from, to, d), to, 0x404040, 0.6f, 20);
-				else particle_trail(PART_SMOKE, 500, hudgunorigin(gun, from, to, d), to, ((quasitracerred * 256 + quasitracergreen )* 256 )+ quasitracerblue, 1.0f, 20);
+                particle_trail(PART_SMOKE, 500, hudgunorigin(gun, from, to, d), to, 0x404040, 0.6f, 20);
                 if(muzzleflash && d->muzzle.x >= 0)
                     particle_flare(d->muzzle, d->muzzle, 150, PART_MUZZLE_FLASH3, 0xFFFFFF, 1.25f, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
@@ -777,7 +767,6 @@ namespace game
 
     void shoot(fpsent *d, const vec &targ)
     {
-		extern int quasikickbackcancellation;
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
         if(attacktime<d->gunwait) return;
         d->gunwait = 0;
@@ -803,7 +792,7 @@ namespace game
         float dist = to.dist(from, unitv);
         unitv.div(dist);
         vec kickback(unitv);
-		if(quasikickbackcancellation == 0) kickback.mul(guns[d->gunselect].kickamount*-2.5f);
+        kickback.mul(guns[d->gunselect].kickamount*-2.5f);
         d->vel.add(kickback);
         float shorten = 0;
         if(guns[d->gunselect].range && dist > guns[d->gunselect].range)
@@ -839,58 +828,6 @@ namespace game
 		if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += guns[d->gunselect].damage*(d->quadmillis ? 4 : 1)*(d->gunselect==GUN_SG ? SGRAYS : 1);
     }
-
-	void quasishoot(fpsent *d, const vec &targ)
-	{
-		extern int quasitriggerbotmode,quasiaimbotmode,
-			quasiattackassist,quasiattackassistms,
-			quasiattackdelay,quasiattackdelayms,
-			quasiattackautoshoot,
-			quasiattackteamkill,
-			quasiaimbotfov,
-			qattackdelay,qattackassist;
-		fpsent *t = NULL;
-		vec target = targ;
-		if((!d->quasiattacking && quasiattackautoshoot == 0) ||
-			(quasitriggerbotmode == 0 && quasiaimbotmode == 0) ||
-			(quasiattackdelay == 1 && lastmillis - qattackdelay < quasiattackdelayms)) return;
-
-		if(quasitriggerbotmode == 1)
-		{
-			t = pointatplayer();
-			if((t && (!isteam(d->team,t->team) || quasiattackteamkill == 1) && t->state == CS_ALIVE) ||
-				(quasiattackassist == 1 && lastmillis - qattackassist > quasiattackassistms))
-			{
-				d->attacking = true;
-			} 
-			else return;
-		}
-		else if(quasiaimbotmode == 1)
-		{
-			float yaw,pitch,pdist,dist = 1000000000.0f,yawang,pitchang,leastyaw=quasiaimbotfov,leastpitch=quasiaimbotfov;
-			loopv(players) {
-				pdist = players[i]->o.dist(d->o);
-				if(players[i] == d || players[i]->state != CS_ALIVE || (isteam(d->team,players[i]->team) && quasiattackteamkill == 0) || !intersect(d,d->o,players[i]->o)) continue;
-				if( pdist < dist) { //select closest
-					ai::getyawpitch(d->o,players[i]->o,yaw,pitch);
-					if(!ai::getsight(d->o, yaw, pitch, players[i]->o, target, pdist, float(quasiaimbotfov),float(quasiaimbotfov))) continue;
-					if(yaw < 0) yaw += 360;
-					yawang = min(max(d->yaw,yaw) - min(d->yaw,yaw),360 - max(d->yaw,yaw) + min(d->yaw,yaw));
-					pitchang = fabs(pitch - d->pitch);
-					if(yawang < leastyaw && pitchang < leastpitch) { dist = pdist; leastyaw = yawang; leastpitch = pitchang; t = players[i];}
-				}
-			}
-			if(t) {
-			ai::getyawpitch(d->o,t->o,d->yaw,d->pitch);
-			target = t->o;
-			}
-			if(t || (quasiattackassist == 1 && lastmillis - qattackassist > quasiattackassistms)) d->attacking = true;
-		}
-		
-		qattackdelay = qattackassist = lastmillis;
-		shoot(d,target);
-		d->attacking = false;
-	}
 
     void adddynlights()
     {
@@ -1040,17 +977,10 @@ namespace game
         removeprojectiles(d);
     }
 
-	VAR(quasidangerenabled,0,0,1);
     void updateweapons(int curtime)
     {
-		extern vec triggerbotlockaim;
         updateprojectiles(curtime);
-        if(player1->clientnum>=0 && player1->state==CS_ALIVE) {  // only shoot when connected to server
-			shoot(player1, worldpos);
-			quasishoot(player1,worldpos);
-		}
-		fpsent * a = playerpointat();
-		if(quasidangerenabled == 1 && a && a->state == CS_ALIVE && a != player1 && followingplayer() != a && !isteam(a->team,player1->team)) {quasidanger(a->o); conoutf(CON_GAMEINFO,"Danger: %s",a->name);}
+        if(player1->clientnum>=0 && player1->state==CS_ALIVE) shoot(player1, worldpos); // only shoot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();
         if(!following) following = player1;

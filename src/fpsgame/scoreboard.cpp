@@ -119,7 +119,10 @@ namespace game
         groups.sort(scoregroupcmp, 0, numgroups);
         return numgroups;
     }
-
+	VARP(quasiscoreboardfrags,0,0,1);
+	VARP(quasiscoreboarddeaths,0,0,1);
+	VARP(quasiscoreboardkpd,0,0,1);
+	VARP(quasiscoreboardaccuracy,0,0,1);
     void renderscoreboard(g3d_gui &g, bool firstpass)
     {
         const ENetAddress *address = connectedpeer();
@@ -208,8 +211,7 @@ namespace game
 
                 g.pushlist(); // horizontal
             }
-
-            if(!cmode || !cmode->hidefrags())
+            if(!cmode || !cmode->hidefrags() || quasiscoreboardfrags == 1)
             { 
                 g.pushlist();
                 g.strut(7);
@@ -217,6 +219,35 @@ namespace game
                 loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
                 g.poplist();
             }
+			if(quasiscoreboarddeaths == 1)
+			{
+				g.pushlist();
+                g.strut(7);
+                g.text("deaths", fgcolor);
+                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->deaths));
+                g.poplist();
+			}
+			if(quasiscoreboardkpd == 1)
+			{
+				g.pushlist();
+                g.strut(7);
+                g.text("kpd", fgcolor);
+                //loopscoregroup(o, g.textf("%4.2f", 0xFFFFDD, NULL, o->frags / ));
+				loopv(sg.players)
+				{
+					float kpd =  float(sg.players[i]->frags) / max(float(sg.players[i]->deaths),1.0f);
+					g.textf("%4.2f", 0xDDFFDD, NULL, kpd);
+				}
+                g.poplist();
+			}
+			if(quasiscoreboardaccuracy == 1)
+			{
+				g.pushlist();
+                g.strut(7);
+                g.text("%", fgcolor);
+                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, (o->totaldamage*100)/max(o->totalshots, 1)));
+                g.poplist();
+			}
 
             if(multiplayer(false) || demoplayback)
             {

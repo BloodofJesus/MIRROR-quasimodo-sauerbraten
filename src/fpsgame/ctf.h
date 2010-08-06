@@ -587,6 +587,7 @@ struct ctfclientmode : clientmode
 
     void rendergame()
     {
+		extern int quasiwallhackflag;
         loopv(flags)
         {
             flag &f = flags[i];
@@ -595,7 +596,7 @@ struct ctfclientmode : clientmode
             const char *flagname = m_hold && (!f.owner || lastmillis%1000 < 500) ? "flags/neutral" : (m_hold ? ctfteamflag(f.owner->team) : f.team)==ctfteamflag(player1->team) ? "flags/blue" : "flags/red";
             float angle;
             vec pos = interpflagpos(f, angle);
-            if(m_hold)
+            if(m_hold || quasiwallhackflag == 1)
                 rendermodel(!f.droptime && !f.owner ? &f.light : NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
                         pos, angle, 0,
                         MDL_GHOST | MDL_CULL_VFC | (f.droptime || f.owner ? MDL_LIGHT : 0),

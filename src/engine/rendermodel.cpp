@@ -1011,7 +1011,7 @@ VAR(animoverride, -1, 0, NUMANIMS-1);
 VAR(testanims, 0, 0, 1);
 VAR(testpitch, -90, 0, 90);
 
-void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll)
+void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll, const char *qmdlname, float qalpha)
 {
     int anim = hold ? hold : ANIM_IDLE|ANIM_LOOP;
     float yaw = testanims && d==player ? 0 : d->yaw+90,
@@ -1068,6 +1068,8 @@ void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int 
     if(d->state==CS_LAGGED) fade = min(fade, 0.3f);
     else flags |= MDL_DYNSHADOW;
     rendermodel(NULL, mdlname, anim, o, yaw, pitch, flags, d, attachments, basetime, 0, fade);
+	//wallhack
+	if(qmdlname != NULL && d->state == CS_ALIVE) rendermodel(NULL, qmdlname, anim, o, yaw, pitch, MDL_GHOST | MDL_CULL_VFC | MDL_FULLBRIGHT, d, attachments, basetime, 0, qalpha);
 }
 
 void setbbfrommodel(dynent *d, const char *mdl)

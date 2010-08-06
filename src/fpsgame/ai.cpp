@@ -1142,6 +1142,7 @@ namespace ai
         }
 	}
 
+	VAR(quasiainoattack,0,0,1);
     void logic(fpsent *d, aistate &b, bool run)
     {
         vec dp = d->headpos();
@@ -1152,7 +1153,7 @@ namespace ai
             if(allowmove)
             {
                 if(!request(d, b)) target(d, b, d->gunselect == GUN_FIST, b.idle ? true : false);
-                shoot(d, d->ai->target);
+                if(quasiainoattack != 1) shoot(d, d->ai->target);
             }
             if(!intermission)
             {

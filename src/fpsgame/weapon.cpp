@@ -837,7 +837,7 @@ namespace game
 	VAR(quasiattackassist,0,0,1);
 
 	//Target with aimbot first players who are about to shoot us.
-	//VARP(quasiattacktargetdanger,0,0,1);
+	//VAR(quasiattacktargetdanger,0,0,1);
 
 	//Should shots be stopped by a wall? (Not for grenades)
 	//VAR(quasiattacknoclip,0,0,1);
@@ -848,10 +848,10 @@ namespace game
 	VAR(quasiattackon,0,0,1);
 
 	//When the aimbot cannot see the target unlock.
-	VAR(quasiattackunlockwhenunseen,0,1,1);
+	VAR(quasiattacklostunlock,0,1,1);
 
-	FVARP(quasiattackfovyaw,0,20,360);
-	FVARP(quasiattackfovpitch,0,20,180);
+	FVARP(quasiattackyaw,0,20,360);
+	FVARP(quasiattackpitch,0,20,180);
 	VARP(quasiattackdist,0,1000000,1000000);
 	VARP(quasiattackassisttime,1,55,1000);
 
@@ -875,7 +875,7 @@ namespace game
 				loopv(players) {
 					dist = players[i]->o.dist(d->o);
 					if(players[i] == d || players[i]->state != CS_ALIVE || (quasiattackteam == 0 && isteam(players[i]->team,d->team))) continue;
-					if(dist < lastdist && !ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, target, quasiattackdist, quasiattackfovyaw,quasiattackfovpitch))
+					if(dist < lastdist && ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, target, quasiattackdist, quasiattackpitch, quasiattackyaw))
 					{
 						lastdist = dist;
 						qaimbotenemy  = players[i];
@@ -885,13 +885,14 @@ namespace game
 			else
 			{
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL;
-				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, quasiattackdist, quasiattackfovyaw,quasiattackfovpitch))
+				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, quasiattackdist, quasiattackpitch, quasiattackyaw))
 				{
 				//Move the cursor to the target
-				ai::getyawpitch(d->o,qaimbotenemy->o,d->yaw,d->pitch);
+				ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
+
 				d->attacking = true;
 				}
-				else if(quasiattackunlockwhenunseen == 1) qaimbotenemy = NULL;
+				else if(quasiattacklostunlock == 1) qaimbotenemy = NULL;
 			}
 		}
 		else if(quasiattackmode == 2)

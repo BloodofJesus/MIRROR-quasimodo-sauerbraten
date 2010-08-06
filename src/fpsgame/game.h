@@ -663,6 +663,8 @@ namespace game
     extern int following;
     extern int smoothmove, smoothdist;
 
+	extern int quasiradarhackenabled,quasiradarhackteam,quasiradarhackspawn,NFO_quasiwhichteam;
+
     extern bool clientoption(const char *arg);
     extern fpsent *getclient(int cn);
     extern fpsent *newclient(int cn);

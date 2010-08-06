@@ -537,6 +537,29 @@ struct ctfclientmode : clientmode
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
             drawblip(d, x, y, s, i, true);
         }
+		if(quasiradarhackenabled == 1)
+		{
+			if(quasiradarhackspawn == 1)
+			{
+				const vector<extentity *> &qents = entities::getents();
+				loopv(qents)
+				{
+					if(qents[i]->type == ET_PLAYERSTART && (NFO_quasiwhichteam > 0 || qents[i]->attr2 == 0)) { //Make sure it's a player spawn, and the correct mode.
+						if(qents[i]->attr2 == NFO_quasiwhichteam && quasiradarhackteam == 0) continue;
+						if(qents[i]->attr2 == NFO_quasiwhichteam) settexture("quasimodo/sdot_blue.png", 1);
+						else settexture("quasimodo/sdot_red.png", 1);
+						drawblip(d, x, y, s, qents[i]->o, false);
+					}
+				}
+			}
+			loopv(players)
+			{
+				if(isteam(players[i]->team,player1->team) && quasiradarhackteam == 0) continue;
+				if(isteam(players[i]->team,player1->team)) settexture("quasimodo/dot_blue.png", 2);
+				else settexture("quasimodo/dot_red.png", 2);
+				drawblip(d, x, y, s, players[i]->o, false);
+			}
+		}
         if(d->state == CS_DEAD && (m_efficiency || !m_protect))
         {
             int wait = respawnwait(d);

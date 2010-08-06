@@ -844,6 +844,9 @@ namespace game
 
 	VAR(quasiattackteam,0,0,1);
 
+	//Weather the aimbot should track and shoot, or just track.
+	VAR(quasiattackshoot,0,1,1);
+
 	//Should wait for trigger from player?
 	VAR(quasiattackon,0,0,1);
 
@@ -882,7 +885,8 @@ namespace game
 					}
 				}
 			}
-			else
+			//Cant use an else here, causes too much lag.
+			if(qaimbotenemy != NULL)
 			{
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL;
 				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, quasiattackdist, quasiattackpitch, quasiattackyaw))
@@ -890,7 +894,7 @@ namespace game
 				//Move the cursor to the target
 				ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
 
-				d->attacking = true;
+				if(quasiattackshoot == 1) d->attacking = true;
 				}
 				else if(quasiattacklostunlock == 1) qaimbotenemy = NULL;
 			}
@@ -903,7 +907,8 @@ namespace game
 			if(e != NULL && e != d && e->state == CS_ALIVE && (quasiattackteam == 1 || !isteam(e->team,d->team))) d->attacking = true;
 		}
 		shoot(d, targ);
-		d->attacking = false;
+		//Only stop attacking if started in the first place
+		if(quasiattackmode != 1 || quasiattackshoot == 1) d->attacking = false;
 	}
 
     void adddynlights()

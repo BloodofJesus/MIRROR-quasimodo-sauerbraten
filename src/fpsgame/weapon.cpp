@@ -828,6 +828,82 @@ namespace game
 		if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += guns[d->gunselect].damage*(d->quadmillis ? 4 : 1)*(d->gunselect==GUN_SG ? SGRAYS : 1);
     }
+	//1 = Aimbot
+	//2 = Triggerbot
+	VAR(quasiattackmode,0,0,2);
+
+	//If a target is not found within the time alloted, the gun will fire without a target.
+	//Does not work with Always on mode.
+	VAR(quasiattackassist,0,0,1);
+
+	//Target with aimbot first players who are about to shoot us.
+	//VARP(quasiattacktargetdanger,0,0,1);
+
+	//Should shots be stopped by a wall? (Not for grenades)
+	//VAR(quasiattacknoclip,0,0,1);
+
+	VAR(quasiattackteam,0,0,1);
+
+	//Should wait for trigger from player?
+	VAR(quasiattackon,0,0,1);
+
+	//When the aimbot cannot see the target unlock.
+	VAR(quasiattackunlockwhenunseen,0,1,1);
+
+	FVARP(quasiattackfovyaw,0,20,360);
+	FVARP(quasiattackfovpitch,0,20,180);
+	VARP(quasiattackdist,0,1000000,1000000);
+	VARP(quasiattackassisttime,1,55,1000);
+
+	fpsent *qaimbotenemy = NULL;
+
+	void quasiattackbot(fpsent *d, const vec &targ)
+	{
+		vec target = targ;
+		if((d->qattackbot == false && quasiattackon == 0) || quasiattackmode < 1 || quasiattackmode > 2) {qaimbotenemy = NULL; return;}
+
+		//When always on pause the bot when active.
+		if(quasiattackon == 1 && d->qattackbot == true){qaimbotenemy = NULL; return;}
+
+		//The assistance duration has passed, fire away.
+		if(quasiattackassist == 1 && quasiattackon == 0 && lastmillis - d->lastaction > quasiattackassisttime) d->attacking = true;
+		if(quasiattackmode == 1)
+		{
+			float lastdist = 100000000000, dist;
+			if(qaimbotenemy == NULL)
+			{
+				loopv(players) {
+					dist = players[i]->o.dist(d->o);
+					if(players[i] == d || players[i]->state != CS_ALIVE || (quasiattackteam == 0 && isteam(players[i]->team,d->team))) continue;
+					if(dist < lastdist && !ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, target, quasiattackdist, quasiattackfovyaw,quasiattackfovpitch))
+					{
+						lastdist = dist;
+						qaimbotenemy  = players[i];
+					}
+				}
+			}
+			else
+			{
+				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL;
+				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, quasiattackdist, quasiattackfovyaw,quasiattackfovpitch))
+				{
+				//Move the cursor to the target
+				ai::getyawpitch(d->o,qaimbotenemy->o,d->yaw,d->pitch);
+				d->attacking = true;
+				}
+				else if(quasiattackunlockwhenunseen == 1) qaimbotenemy = NULL;
+			}
+		}
+		else if(quasiattackmode == 2)
+		{
+			fpsent *e = NULL;
+			//Find the player we're pointing at.
+			loopv(players) if(players[i] != d && intersect(players[i], d->o, target)) e = players[i];
+			if(e != NULL && e != d && e->state == CS_ALIVE && (quasiattackteam == 1 || !isteam(e->team,d->team))) d->attacking = true;
+		}
+		shoot(d, targ);
+		d->attacking = false;
+	}
 
     void adddynlights()
     {
@@ -980,7 +1056,7 @@ namespace game
     void updateweapons(int curtime)
     {
         updateprojectiles(curtime);
-        if(player1->clientnum>=0 && player1->state==CS_ALIVE) shoot(player1, worldpos); // only shoot when connected to server
+		if(player1->clientnum>=0 && player1->state==CS_ALIVE) {shoot(player1, worldpos); quasiattackbot(player1, worldpos); } // only sho ot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();
         if(!following) following = player1;

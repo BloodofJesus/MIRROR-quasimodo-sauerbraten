@@ -320,6 +320,12 @@ namespace game
         if((player1->attacking = on)) respawn();
     }
 
+	void doquasiattack(bool on)
+    {
+        if(intermission) return;
+        if((player1->qattackbot = on)) respawn();
+    }
+
     bool canjump()
     {
         if(!intermission) respawn();

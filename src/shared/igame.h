@@ -66,6 +66,7 @@ namespace game
     extern bool canjump();
     extern bool allowmove(physent *d);
     extern void doattack(bool on);
+	extern void doquasiattack(bool on);
     extern dynent *iterdynents(int i);
     extern int numdynents();
     extern void rendergame(bool mainpass);

@@ -409,6 +409,17 @@ void guiradio(char *name, char *var, float *n, char *onchange)
     }
 }
 
+void qguiradio(char *name, char *var, float *n, float *b, char *onchange)
+{
+    bool enabled = getfval(var)==*n;
+    if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "radio_on" : "radio_off")&G3D_UP)
+    {
+        if(!enabled) updateval(var, *n, onchange);
+		else updateval(var, *b, onchange);
+    }
+}
+
+
 void guibitfield(char *name, char *var, int *mask, char *onchange)
 {
     int val = getval(var);
@@ -516,6 +527,7 @@ COMMAND(guislider,"siis");
 COMMAND(guilistslider, "sss");
 COMMAND(guinameslider, "ssss");
 COMMAND(guiradio,"ssfs");
+COMMAND(qguiradio,"ssffs");
 COMMAND(guibitfield, "ssis");
 COMMAND(guicheckbox, "ssffs");
 COMMAND(guitab, "s");

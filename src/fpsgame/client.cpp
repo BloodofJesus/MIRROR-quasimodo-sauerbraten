@@ -676,12 +676,15 @@ namespace game
 
     static void sendposition(fpsent *d, packetbuf &q)
     {
+		int quasileapmode = getvar("quasileapmode");
         putint(q, N_POS);
         putuint(q, d->clientnum);
         // 3 bits phys state, 1 bit life sequence, 2 bits move, 2 bits strafe
         uchar physstate = d->physstate | ((d->lifesequence&1)<<3) | ((d->move&3)<<4) | ((d->strafe&3)<<6);
         q.put(physstate);
-        ivec o = ivec(vec(d->o.x, d->o.y, d->o.z-d->eyeheight).mul(DMF));
+		ivec o;
+		if(d->state == CS_QLEAP && quasileapmode == 0) o = ivec(vec(d->qo.x, d->qo.y, d->qo.z-d->eyeheight).mul(DMF)); //Use the Restore position.
+		else o = ivec(vec(d->o.x, d->o.y, d->o.z-d->eyeheight).mul(DMF));
         uint vel = min(int(d->vel.magnitude()*DVELF), 0xFFFF), fall = min(int(d->falling.magnitude()*DVELF), 0xFFFF);
         // 3 bits position, 1 bit velocity, 3 bits falling, 1 bit material
         uint flags = 0;
@@ -729,23 +732,28 @@ namespace game
         }
     }
 
-	VAR(quasileapteleport,0,0,1);
     void sendposition(fpsent *d, bool reliable)
     {
-        if(d->state != CS_ALIVE && d->state != CS_EDITING && d->state != CS_QLEAP) return;
-		if(d->state == CS_QLEAP && quasileapteleport == 0) return;
+        if(d->state != CS_ALIVE && d->state != CS_EDITING) return;
         packetbuf q(100, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
         sendposition(d, q);
         sendclientpacket(q.finalize(), 0);
     }
 
+	VAR(quasileapmode,0,0,2);
+	int qleapwait = 0;
     void sendpositions()
     {
         loopv(players)
         {
             fpsent *d = players[i];
-            if((d == player1 || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING))
+            if((d == player1 || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING || (d->state == CS_QLEAP && quasileapmode != 1)))
             {
+				if(d->state == CS_QLEAP && quasileapmode == 2) {
+					if(qleapwait == 0 || qleapwait <= lastmillis) {
+						qleapwait = lastmillis + rand() % 5000 + 1000; //Delay anywhere from 1000 to 6000 ms.
+					} else continue;
+				}
                 packetbuf q(100);
                 sendposition(d, q);
                 for(int j = i+1; j < players.length(); j++)

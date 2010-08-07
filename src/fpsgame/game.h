@@ -520,6 +520,7 @@ struct fpsent : dynent, fpsstate
     editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     int smoothmillis;
+	vec qteledest[5];
 
     string name, team, info;
     int playermodel;

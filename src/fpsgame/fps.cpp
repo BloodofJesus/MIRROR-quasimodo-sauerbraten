@@ -330,19 +330,34 @@ namespace game
         if(intermission) return;
         if((player1->qattackbot = on)) respawn();
     }
+	VAR(quasileapenabled,0,0,1);
+	VAR(quasileapautorestore,0,0,1);
+	void doquasileaprestore()
+	{
+		if(player1->state == CS_QLEAP)
+		{
+			player1->o = player1->qo;
+			entinmap(player1);
+			updatedynentcache(player1);
+		}
+	}
 	void doquasileap()
 	{
+		if(quasileapenabled == 0 && player1->state != CS_QLEAP) return;
 		if(player1->state != CS_QLEAP && player1->state != CS_QFLY && (player1->state == CS_ALIVE || player1->state == CS_DEAD)) //Leap and fly are incompatable
 		{
 			player1->qstate = player1->state; //Store State
+			player1->qo = player1->o;
 			player1->state = CS_QLEAP;
 		}
 		else if(player1->state == CS_QLEAP)
 		{
+			if(quasileapautorestore == 1) doquasileaprestore(); //restore pos
 			player1->state = player1->qstate; //Recover State
 		}
 	}
 	ICOMMAND(quasileap, "", (), { doquasileap(); });
+	ICOMMAND(quasileaprestore, "", (), { doquasileaprestore(); });
 	void setquasitele(int i)
 	{
 

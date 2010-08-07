@@ -52,7 +52,7 @@ enum { COLLIDE_AABB = 0, COLLIDE_OBB, COLLIDE_ELLIPSE };
 
 struct physent                                  // base entity type, can be affected by physics
 {
-    vec o, vel, falling;                        // origin, velocity
+    vec o, vel, falling, qo;                        // origin, velocity, quasiorigin
     vec deltapos, newpos;                       // movement interpolation
     float yaw, pitch, roll;
     float maxspeed;                             // cubes per second, 100 for player

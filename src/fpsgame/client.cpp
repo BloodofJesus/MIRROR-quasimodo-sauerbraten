@@ -729,9 +729,11 @@ namespace game
         }
     }
 
+	VAR(quasileapteleport,0,0,1);
     void sendposition(fpsent *d, bool reliable)
     {
-        if(d->state != CS_ALIVE && d->state != CS_EDITING) return;
+        if(d->state != CS_ALIVE && d->state != CS_EDITING && d->state != CS_QLEAP) return;
+		if(d->state == CS_QLEAP && quasileapteleport == 0) return;
         packetbuf q(100, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
         sendposition(d, q);
         sendclientpacket(q.finalize(), 0);

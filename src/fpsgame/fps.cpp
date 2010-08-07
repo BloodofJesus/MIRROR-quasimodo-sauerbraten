@@ -330,6 +330,23 @@ namespace game
         if(intermission) return;
         if((player1->qattackbot = on)) respawn();
     }
+	void doquasileap()
+	{
+		if(player1->state != CS_QLEAP && player1->state != CS_QFLY && (player1->state == CS_ALIVE || player1->state == CS_DEAD)) //Leap and fly are incompatable
+		{
+			player1->qstate = player1->state; //Store State
+			player1->state = CS_QLEAP;
+		}
+		else if(player1->state == CS_QLEAP)
+		{
+			player1->state = player1->qstate; //Recover State
+		}
+	}
+	ICOMMAND(quasileap, "", (), { doquasileap(); });
+	void setquasitele(int i)
+	{
+
+	}
 
     bool canjump()
     {
@@ -834,6 +851,18 @@ namespace game
             draw_text("SPECTATOR", w*1800/h - tw - pw, 1650 - th - fh);
             if(f) draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh);
         }
+		else if(player1->state == CS_QLEAP)
+		{
+			int pw, ph, tw, th, fw, fh;
+            text_bounds("  ", pw, ph);
+            text_bounds("QUASIMODO LEAP", tw, th);
+            th = max(th, ph);
+            fpsent *f = followingplayer();
+            text_bounds(f ? colorname(f) : " ", fw, fh);
+            fh = max(fh, ph);
+            draw_text("QUASIMODO LEAP", w*1800/h - tw - pw, 1650 - th - fh);
+            if(f) draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh);
+		}
 
         fpsent *d = hudplayer();
         if(d->state!=CS_EDITING)

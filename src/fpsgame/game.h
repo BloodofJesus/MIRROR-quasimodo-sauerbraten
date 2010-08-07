@@ -512,6 +512,7 @@ struct fpsent : dynent, fpsstate
     int lastpain;
     int lastaction, lastattackgun;
     bool attacking, qattackbot;
+	int qstate;
     int attacksound, attackchan, idlesound, idlechan;
     int lasttaunt;
     int lastpickup, lastpickupmillis, lastbase, lastrepammo, flagpickup;

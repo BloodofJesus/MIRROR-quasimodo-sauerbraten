@@ -1653,6 +1653,11 @@ VARP(maxroll, 0, 3, 20);
 FVAR(straferoll, 0, 0.033f, 90);
 VAR(floatspeed, 10, 100, 1000);
 VARP(quasileapspeed, 10, 100, 1000);
+VARP(quasispeedhackspeed,1,1,1000);
+VAR(quasispeedhackenabled,0,0,1);
+VAR(quasijumphackenabled,0,0,1);
+VAR(quasijumphackairjump,0,0,1);
+VAR(quasijumphackspeed,1,1,1000);
 
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
@@ -1664,14 +1669,19 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             pl->vel.z = max(pl->vel.z, JUMPVEL);
         }
     }
-    else if(pl->physstate >= PHYS_SLOPE || water)
+    else if(pl->physstate >= PHYS_SLOPE || water || quasijumphackenabled == 1)
     {
         if(water && !pl->inwater) pl->vel.div(8);
         if(pl->jumping)
         {
             pl->jumping = false;
-
-            pl->vel.z = max(pl->vel.z, JUMPVEL); // physics impulse upwards
+			float qjumpvel = JUMPVEL * max(quasijumphackspeed,1);
+            if(quasijumphackenabled == 0 || quasijumphackairjump == 0) pl->vel.z = max(pl->vel.z, (quasijumphackenabled == 1? qjumpvel:JUMPVEL)); // physics impulse upwards
+			else if(quasijumphackenabled == 1 && quasijumphackairjump == 1) {
+				pl->falling = vec(0,0,0);
+				pl->timeinair = 0;
+				pl->vel.z += qjumpvel;
+			}
             if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
 
             game::physicstrigger(pl, local, 1, 0);
@@ -1705,7 +1715,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 			if(pl==player && pl->state != CS_QLEAP) d.mul(floatspeed/100.0f);
 			else if(pl==player && pl->state == CS_QLEAP) d.mul(quasileapspeed/100.0f);
         }
-        else if(!water && game::allowmove(pl) && pl->state != CS_QLEAP) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+        else if(!water && game::allowmove(pl) && pl->state != CS_QLEAP) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f) *(quasispeedhackenabled == 1?quasispeedhackspeed:1)); // EXPERIMENTAL
 		else if(pl->state == CS_QLEAP && !water && game::allowmove(pl)) d.mul(quasileapspeed/100.0f);
     }
     float fric = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);

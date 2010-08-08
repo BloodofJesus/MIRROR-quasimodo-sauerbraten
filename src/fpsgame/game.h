@@ -731,7 +731,7 @@ namespace game
 
     // weapon
     extern void shoot(fpsent *d, const vec &targ);
-	extern void quasiattackbot(fpsent *d, const vec &targ);
+	extern void quasiattackbot(fpsent *d, vec targ);
     extern void shoteffects(int gun, const vec &from, const vec &to, fpsent *d, bool local, int id, int prevaction);
     extern void explode(bool local, fpsent *owner, const vec &v, dynent *safe, int dam, int gun);
     extern void explodeeffects(int gun, fpsent *d, bool local, int id = 0);

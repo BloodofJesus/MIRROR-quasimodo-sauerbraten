@@ -280,6 +280,7 @@ namespace ai
     extern bool cansee(fpsent *d, vec &x, vec &y, vec &targ = aitarget);
 	extern bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy);
 	extern void getyawpitch(const vec &from, const vec &pos, float &yaw, float &pitch);
+	extern void scaleyawpitch(float &yaw, float &pitch, float targyaw, float targpitch, float frame, float scale);
 
     extern void init(fpsent *d, int at, int on, int sk, int bn, int pm, const char *name, const char *team);
     extern void update();

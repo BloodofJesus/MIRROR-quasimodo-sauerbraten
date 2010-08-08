@@ -859,9 +859,8 @@ namespace game
 
 	fpsent *qaimbotenemy = NULL;
 
-	void quasiattackbot(fpsent *d, const vec &targ)
+	void quasiattackbot(fpsent *d, vec targ)
 	{
-		vec target = targ;
 		if((d->qattackbot == false && quasiattackon == 0) || quasiattackmode < 1 || quasiattackmode > 2) {qaimbotenemy = NULL; return;}
 
 		//When always on pause the bot when active.
@@ -872,37 +871,37 @@ namespace game
 		if(quasiattackmode == 1)
 		{
 			float lastdist = 100000000000, dist;
-			if(qaimbotenemy == NULL)
+			if(qaimbotenemy == NULL) //Look for a new target only if we dont have one.
 			{
 				loopv(players) {
 					dist = players[i]->o.dist(d->o);
 					if(players[i] == d || players[i]->state != CS_ALIVE || (quasiattackteam == 0 && isteam(players[i]->team,d->team))) continue;
-					if(dist < lastdist && ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, target, guns[d->gunselect].range, quasiattackpitch, quasiattackyaw))
+					if(dist < lastdist && ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, targ, (d->gunselect == GUN_FIST ? 2048 : guns[d->gunselect].range), quasiattackpitch, quasiattackyaw))
 					{
 						lastdist = dist;
 						qaimbotenemy  = players[i];
 					}
 				}
-			}
-			//Cant use an else here, causes too much lag.
+			} 
 			if(qaimbotenemy != NULL)
 			{
-				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL;
-				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, guns[d->gunselect].range, quasiattackpitch, quasiattackyaw))
+				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL; //Not alive any more so unlock.
+				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, targ, (d->gunselect == GUN_FIST ? 2048 : guns[d->gunselect].range), quasiattackpitch, quasiattackyaw))
 				{
-				//Move the cursor to the target
-				ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
+					targ = qaimbotenemy->o;
+					//Move the cursor to the target
+					ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
 
-				if(quasiattackshoot == 1) d->attacking = true;
+					if(quasiattackshoot == 1) d->attacking = true;
 				}
-				else if(quasiattacklostunlock == 1) qaimbotenemy = NULL;
+				else if(quasiattacklostunlock == 1) qaimbotenemy = NULL; //Cant see the target, so unlock
 			}
 		}
 		else if(quasiattackmode == 2)
 		{
 			fpsent *e = NULL;
 			//Find the player we're pointing at.
-			loopv(players) if(players[i] != d && intersect(players[i], d->o, target)) e = players[i];
+			loopv(players) if(players[i] != d && intersect(players[i], d->o, targ)) e = players[i];
 			if(e != NULL && e != d && e->state == CS_ALIVE && (quasiattackteam == 1 || !isteam(e->team,d->team))) d->attacking = true;
 		}
 		shoot(d, targ);

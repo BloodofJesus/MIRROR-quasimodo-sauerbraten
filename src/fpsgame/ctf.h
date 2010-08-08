@@ -554,7 +554,7 @@ struct ctfclientmode : clientmode
 			}
 			loopv(players)
 			{
-				if((isteam(players[i]->team,player1->team) && quasiradarhackteam == 0) || (players[i]->state != CS_ALIVE && players[i]->state != CS_LAGGED && players[i]->state != CS_EDITING) continue;
+				if((isteam(players[i]->team,player1->team) && quasiradarhackteam == 0) || (players[i]->state != CS_ALIVE && players[i]->state != CS_LAGGED && players[i]->state != CS_EDITING)) continue;
 				if(isteam(players[i]->team,player1->team)) settexture("quasimodo/dot_blue.png", 2);
 				else settexture("quasimodo/dot_red.png", 2);
 				drawblip(d, x, y, s, players[i]->o, false);

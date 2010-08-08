@@ -332,30 +332,52 @@ namespace game
     }
 	VAR(quasileapenabled,0,0,1);
 	VAR(quasileapautorestore,0,0,1);
-	void doquasileaprestore()
+	void doquasirestore(int q = 0)
 	{
-		if(player1->state == CS_QLEAP)
+		if(player1->state == CS_QLEAP || player1->state == CS_SPECTATOR)
 		{
-			player1->o = qplayer.o; //recover only the position.
-			entinmap(player1);
-			updatedynentcache(player1);
+			if(q == 0) {//restore position only 
+				player1->o = qplayer.o; //recover only the position.
+			} else {
+				*player1 = qplayer; //recover everything.
+			}
+			player1->reset();
 		}
 	}
 	void doquasileap()
 	{
 		if(player1->state == CS_ALIVE && quasileapenabled == 1) //Only When Alive
 		{
-			qplayer = *player1; //Store the entire fpsent.
+			qplayer = *player1; //Save
 			player1->state = CS_QLEAP;
 		}
 		else if(player1->state == CS_QLEAP)
 		{
-			if(quasileapautorestore == 1) doquasileaprestore(); //restore pos
-			player1->state = qplayer.state; //Recover State
+			if(quasileapautorestore == 1) doquasirestore(1); //restore pos
+			else player1->state = qplayer.state; //Recover State
 		}
 	}
 	ICOMMAND(quasileap, "", (), { doquasileap(); });
-	ICOMMAND(quasileaprestore, "", (), { doquasileaprestore(); });
+	ICOMMAND(quasirestore, "i", (int q), { doquasirestore(q); });
+	VARR(qspec,0,0,1);
+	void doquasispec()
+	{
+		if(player1->state == CS_ALIVE || player1->state == CS_DEAD || player1->state == CS_EDITING || (player1->state == CS_SPECTATOR && qspec == 1))
+		{
+			if(qspec == 0)
+			{
+				qplayer = *player1; //Save
+				player1->state = CS_SPECTATOR;
+				qspec = 1;
+			}
+			else
+			{
+				doquasirestore(1);
+				qspec = 0;
+			}
+		}
+	}
+	ICOMMAND(quasispec,"",(),{ doquasispec(); });
 	void setquasitele(int i)
 	{
 
@@ -440,8 +462,8 @@ namespace game
             else d->resetinterp();
             return;
         }
-		else if((d->state!=CS_ALIVE && d->state != CS_QLEAP)|| intermission) return;
-
+		else if((d->state!=CS_ALIVE && d->state != CS_QLEAP && getvar("qspec") != 1)|| intermission) return;
+		if(d == player1 && getvar("qspec") == 1) d = &qplayer; //make the changes to our save. Dont drop out of spectator though.
         fpsent *h = followingplayer();
         if(!h) h = player1;
         int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;

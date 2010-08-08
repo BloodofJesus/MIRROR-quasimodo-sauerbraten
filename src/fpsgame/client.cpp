@@ -744,7 +744,7 @@ namespace game
         loopv(players)
         {
             fpsent *d = players[i];
-            if((d == player1 || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING || (d->state == CS_QLEAP && quasileapmode != 1)))
+            if((d == player1 || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING || (d->state == CS_QLEAP && quasileapmode != 1) || (d->state == CS_SPECTATOR && getvar("qspec") == 1)))
             {
 				if(d->state == CS_QLEAP && quasileapmode == 2) {
 					if(qleapwait == 0 || qleapwait <= lastmillis) {
@@ -752,7 +752,8 @@ namespace game
 					} else continue;
 				}
                 packetbuf q(100);
-				if(d->state == CS_QLEAP) sendposition(&qplayer,q); //Send the stored location.
+				//The spectator is for quasispect -- ingame specing.
+				if(d->state == CS_QLEAP || d->state == CS_SPECTATOR) sendposition(&qplayer,q); //Send the stored location.
                 else sendposition(d, q);
                 for(int j = i+1; j < players.length(); j++)
                 {

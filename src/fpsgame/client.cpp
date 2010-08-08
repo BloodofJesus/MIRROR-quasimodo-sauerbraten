@@ -683,7 +683,7 @@ namespace game
         uchar physstate = d->physstate | ((d->lifesequence&1)<<3) | ((d->move&3)<<4) | ((d->strafe&3)<<6);
         q.put(physstate);
 		ivec o;
-		if(d->state == CS_QLEAP && quasileapmode == 0) o = ivec(vec(d->qo.x, d->qo.y, d->qo.z-d->eyeheight).mul(DMF)); //Use the Restore position.
+		if(d->state == CS_QLEAP && (quasileapmode == 0 || quasileapmode == 2)) o = ivec(vec(d->qo.x, d->qo.y, d->qo.z-d->eyeheight).mul(DMF)); //Use the Restore position.
 		else o = ivec(vec(d->o.x, d->o.y, d->o.z-d->eyeheight).mul(DMF));
         uint vel = min(int(d->vel.magnitude()*DVELF), 0xFFFF), fall = min(int(d->falling.magnitude()*DVELF), 0xFFFF);
         // 3 bits position, 1 bit velocity, 3 bits falling, 1 bit material
@@ -1768,7 +1768,7 @@ namespace game
 
     void gotoplayer(const char *arg)
     {
-        if(player1->state!=CS_SPECTATOR && player1->state!=CS_EDITING) return;
+        if(player1->state!=CS_SPECTATOR && player1->state!=CS_EDITING && player1->state != CS_QLEAP) return;
         int i = parseplayer(arg);
         if(i>=0)
         {

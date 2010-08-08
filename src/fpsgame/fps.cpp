@@ -343,8 +343,7 @@ namespace game
 	}
 	void doquasileap()
 	{
-		if(quasileapenabled == 0 && player1->state != CS_QLEAP) return;
-		if(player1->state != CS_QLEAP && player1->state != CS_QFLY && (player1->state == CS_ALIVE || player1->state == CS_DEAD)) //Leap and fly are incompatable
+		if(player1->state == CS_ALIVE && quasileapenabled == 1) //Only When Alive
 		{
 			player1->qstate = player1->state; //Store State
 			player1->qo = player1->o;

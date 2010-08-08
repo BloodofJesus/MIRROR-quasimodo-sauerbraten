@@ -1652,6 +1652,7 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 VARP(maxroll, 0, 3, 20);
 FVAR(straferoll, 0, 0.033f, 90);
 VAR(floatspeed, 10, 100, 1000);
+VARP(quasileapspeed, 10, 100, 1000);
 
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
@@ -1701,9 +1702,11 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     {
         if(floating)
         {
-            if(pl==player) d.mul(floatspeed/100.0f);
+			if(pl==player && pl->state != CS_QLEAP) d.mul(floatspeed/100.0f);
+			else if(pl==player && pl->state == CS_QLEAP) d.mul(quasileapspeed/100.0f);
         }
-        else if(!water && game::allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+        else if(!water && game::allowmove(pl) && pl->state != CS_QLEAP) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+		else if(pl->state == CS_QLEAP && !water && game::allowmove(pl)) d.mul(quasileapspeed/100.0f);
     }
     float fric = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);
     pl->vel.lerp(d, pl->vel, pow(1 - 1/fric, curtime/20.0f));
@@ -1743,12 +1746,12 @@ void modifygravity(physent *pl, bool water, int curtime)
 // main physics routine, moves a player/monster for a curtime step
 // moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 // local is false for multiplayer prediction
-
+VAR(quasileapflight,0,2,2);
 bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 {
     int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->eyeheight)/4));
     bool water = isliquid(material&MATF_VOLUME);
-    bool floating = pl->type==ENT_PLAYER && (pl->state==CS_EDITING || pl->state==CS_SPECTATOR);
+    bool floating = pl->type==ENT_PLAYER && (pl->state==CS_EDITING || pl->state==CS_SPECTATOR || (pl->state == CS_QLEAP && quasileapflight != 0));
     float secs = curtime/1000.f;
 
     // apply gravity
@@ -1771,7 +1774,17 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
             pl->timeinair = 0;
             pl->falling = vec(0, 0, 0);
         }
-        pl->o.add(d);
+		if(pl->state != CS_QLEAP) pl->o.add(d);
+		else if(quasileapflight == 1) //Clipping
+		{
+			int collisions = 0;
+			d.mul(1.0f/moveres);
+			loopi(moveres) if(!move(pl, d) && ++collisions<5) i--;
+		}
+		else if(quasileapflight == 2) //Non-Clipping
+		{
+			pl->o.add(d);
+		}
     }
     else                        // apply velocity with collision
     {

@@ -31,7 +31,7 @@ namespace game
 
     void nextweapon(int dir, bool force = false)
     {
-        if(player1->state!=CS_ALIVE) return;
+        if(player1->state!=CS_ALIVE && player1->state!=CS_QLEAP) return;
         dir = (dir < 0 ? NUMGUNS-1 : 1);
         int gun = player1->gunselect;
         loopi(NUMGUNS)
@@ -55,7 +55,7 @@ namespace game
     void setweapon(const char *name, bool force = false)
     {
         int gun = getweapon(name);
-        if(player1->state!=CS_ALIVE || gun<GUN_FIST || gun>GUN_PISTOL) return;
+        if((player1->state!=CS_ALIVE && player1->state!=CS_QLEAP)|| gun<GUN_FIST || gun>GUN_PISTOL) return;
         if(force || player1->ammo[gun]) gunselect(gun, player1);
         else playsound(S_NOAMMO);
     }
@@ -63,7 +63,7 @@ namespace game
 
     void cycleweapon(int numguns, int *guns, bool force = false)
     {
-        if(numguns<=0 || player1->state!=CS_ALIVE) return;
+        if(numguns<=0 || (player1->state!=CS_ALIVE && player1->state!=CS_QLEAP)) return;
         int offset = 0;
         loopi(numguns) if(guns[i] == player1->gunselect) { offset = i+1; break; }
         loopi(numguns)
@@ -93,7 +93,7 @@ namespace game
 
     void weaponswitch(fpsent *d)
     {
-        if(d->state!=CS_ALIVE) return;
+        if(d->state!=CS_ALIVE && player1->state!=CS_QLEAP) return;
         int s = d->gunselect;
         if     (s!=GUN_CG     && d->ammo[GUN_CG])     s = GUN_CG;
         else if(s!=GUN_RL     && d->ammo[GUN_RL])     s = GUN_RL;
@@ -116,7 +116,7 @@ namespace game
     } while(0)
     ICOMMAND(weapon, "sssssss", (char *w1, char *w2, char *w3, char *w4, char *w5, char *w6, char *w7),
     {
-        if(player1->state!=CS_ALIVE) return;
+        if(player1->state!=CS_ALIVE && player1->state!=CS_QLEAP) return;
         TRYWEAPON(w1);
         TRYWEAPON(w2);
         TRYWEAPON(w3);
@@ -408,7 +408,7 @@ namespace game
 
     void radialeffect(dynent *o, const vec &v, int qdam, fpsent *at, int gun)
     {
-        if(o->state!=CS_ALIVE) return;
+        if(o->state!=CS_ALIVE && player1->state!=CS_QLEAP) return;
         vec dir;
         float dist = projdist(o, dir, v);
         if(dist<RL_DAMRAD)
@@ -503,7 +503,7 @@ namespace game
 
     bool projdamage(dynent *o, projectile &p, vec &v, int qdam)
     {
-        if(o->state!=CS_ALIVE) return false;
+        if(o->state!=CS_ALIVE && player1->state!=CS_QLEAP) return false;
         if(!intersect(o, p.o, v)) return false;
         projsplash(p, v, o, qdam);
         vec dir;
@@ -708,7 +708,7 @@ namespace game
         loopi(numdynents())
         {
             dynent *o = iterdynents(i);
-            if(o==at || o->state!=CS_ALIVE) continue;
+            if(o==at || (o->state!=CS_ALIVE && player1->state!=CS_QLEAP)) continue;
             float dist;
             if(!intersect(o, from, to, dist)) continue;
             if(dist<bestdist)
@@ -855,7 +855,6 @@ namespace game
 
 	FVARP(quasiattackyaw,0,20,360);
 	FVARP(quasiattackpitch,0,20,180);
-	VARP(quasiattackdist,0,1000000,1000000);
 	VARP(quasiattackassisttime,1,55,1000);
 
 	fpsent *qaimbotenemy = NULL;
@@ -878,7 +877,7 @@ namespace game
 				loopv(players) {
 					dist = players[i]->o.dist(d->o);
 					if(players[i] == d || players[i]->state != CS_ALIVE || (quasiattackteam == 0 && isteam(players[i]->team,d->team))) continue;
-					if(dist < lastdist && ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, target, quasiattackdist, quasiattackpitch, quasiattackyaw))
+					if(dist < lastdist && ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, target, guns[d->gunselect].range, quasiattackpitch, quasiattackyaw))
 					{
 						lastdist = dist;
 						qaimbotenemy  = players[i];
@@ -889,7 +888,7 @@ namespace game
 			if(qaimbotenemy != NULL)
 			{
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL;
-				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, quasiattackdist, quasiattackpitch, quasiattackyaw))
+				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, target, guns[d->gunselect].range, quasiattackpitch, quasiattackyaw))
 				{
 				//Move the cursor to the target
 				ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
@@ -1015,7 +1014,7 @@ namespace game
                 return;
         }
         if(gun >= 0 && gun < NUMGUNS &&
-           d->clientnum >= 0 && d->state == CS_ALIVE &&
+           d->clientnum >= 0 && (d->state == CS_ALIVE || player1->state==CS_QLEAP) &&
            d->lastattackgun == gun && lastmillis - d->lastaction < guns[gun].attackdelay + 50)
         {
             d->attackchan = playsound(d->attacksound, local ? NULL : &d->o, NULL, -1, -1, d->attackchan);
@@ -1027,7 +1026,7 @@ namespace game
     void checkidlesound(fpsent *d, bool local)
     {
         int sound = -1, radius = 0;
-        if(d->clientnum >= 0 && d->state == CS_ALIVE) switch(d->gunselect)
+        if(d->clientnum >= 0 && (d->state == CS_ALIVE || player1->state==CS_QLEAP)) switch(d->gunselect)
         {
             case GUN_FIST:
                 if(chainsawhudgun && d->attacksound < 0)
@@ -1062,7 +1061,7 @@ namespace game
     void updateweapons(int curtime)
     {
         updateprojectiles(curtime);
-		if(player1->clientnum>=0 && player1->state==CS_ALIVE) {shoot(player1, worldpos); quasiattackbot(player1, worldpos); } // only sho ot when connected to server
+		if(player1->clientnum>=0 && (player1->state==CS_ALIVE || player1->state==CS_QLEAP)) {shoot(player1, worldpos); quasiattackbot(player1, worldpos); } // only sho ot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();
         if(!following) following = player1;

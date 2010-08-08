@@ -676,7 +676,6 @@ namespace game
 
     static void sendposition(fpsent *d, packetbuf &q)
     {
-		conoutf(CON_GAMEINFO,"X %f Y %f Z %f",d->o.x,d->o.y,d->o.z);
         putint(q, N_POS);
         putuint(q, d->clientnum);
         // 3 bits phys state, 1 bit life sequence, 2 bits move, 2 bits strafe

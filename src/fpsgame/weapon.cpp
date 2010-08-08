@@ -837,17 +837,10 @@ namespace game
 	//Does not work with Always on mode.
 	VAR(quasiattackassist,0,0,1);
 
-	//Target with aimbot first players who are about to shoot us.
-	//VAR(quasiattacktargetdanger,0,0,1);
-
-	//Should shots be stopped by a wall? (Not for grenades)
-	//VAR(quasiattacknoclip,0,0,1);
-
 	VAR(quasiattackteam,0,0,1);
 
 	//Weather the aimbot should track and shoot, or just track.
 	VAR(quasiattackshoot,0,1,1);
-
 	//Should wait for trigger from player?
 	VAR(quasiattackon,0,0,1);
 
@@ -859,6 +852,9 @@ namespace game
 	VARP(quasiattackassisttime,1,55,1000);
 
 	fpsent *qaimbotenemy = NULL;
+	float qtargyaw,qtargpitch;
+	int qsteps = 0;
+	bool qsmooth = false;
 
 	void quasiattackbot(fpsent *d, vec targ)
 	{
@@ -883,7 +879,7 @@ namespace game
 						qaimbotenemy  = players[i];
 					}
 				}
-			} 
+			}
 			if(qaimbotenemy != NULL)
 			{
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL; //Not alive any more so unlock.

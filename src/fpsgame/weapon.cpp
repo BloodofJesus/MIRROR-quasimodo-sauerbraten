@@ -765,6 +765,7 @@ namespace game
         else if(d->gunselect!=GUN_FIST && d->gunselect!=GUN_BITE) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), d->gunselect==GUN_RIFLE ? 3.0f : 2.0f);
     }
 
+	VAR(quasigunkickback,0,1,1000);
     void shoot(fpsent *d, const vec &targ)
     {
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
@@ -792,7 +793,7 @@ namespace game
         float dist = to.dist(from, unitv);
         unitv.div(dist);
         vec kickback(unitv);
-        kickback.mul(guns[d->gunselect].kickamount*-2.5f);
+        kickback.mul(guns[d->gunselect].kickamount*-2.5f*quasigunkickback);
         d->vel.add(kickback);
         float shorten = 0;
         if(guns[d->gunselect].range && dist > guns[d->gunselect].range)

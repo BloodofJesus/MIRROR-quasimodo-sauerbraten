@@ -14,7 +14,7 @@ namespace game
 
     int following = -1, followdir = 0;
 
-    fpsent *player1 = NULL;         // our client
+    fpsent *player1 = NULL, qplayer;         // our client
     vector<fpsent *> players;       // other clients
     int savedammo[NUMGUNS];
 
@@ -336,7 +336,7 @@ namespace game
 	{
 		if(player1->state == CS_QLEAP)
 		{
-			player1->o = player1->qo;
+			player1->o = qplayer.o; //recover only the position.
 			entinmap(player1);
 			updatedynentcache(player1);
 		}
@@ -345,14 +345,13 @@ namespace game
 	{
 		if(player1->state == CS_ALIVE && quasileapenabled == 1) //Only When Alive
 		{
-			player1->qstate = player1->state; //Store State
-			player1->qo = player1->o;
+			qplayer = *player1; //Store the entire fpsent.
 			player1->state = CS_QLEAP;
 		}
 		else if(player1->state == CS_QLEAP)
 		{
 			if(quasileapautorestore == 1) doquasileaprestore(); //restore pos
-			player1->state = player1->qstate; //Recover State
+			player1->state = qplayer.state; //Recover State
 		}
 	}
 	ICOMMAND(quasileap, "", (), { doquasileap(); });
@@ -441,7 +440,7 @@ namespace game
             else d->resetinterp();
             return;
         }
-        else if(d->state!=CS_ALIVE || intermission) return;
+		else if((d->state!=CS_ALIVE && d->state != CS_QLEAP)|| intermission) return;
 
         fpsent *h = followingplayer();
         if(!h) h = player1;

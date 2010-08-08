@@ -512,7 +512,6 @@ struct fpsent : dynent, fpsstate
     int lastpain;
     int lastaction, lastattackgun;
     bool attacking, qattackbot;
-	int qstate;
     int attacksound, attackchan, idlesound, idlechan;
     int lasttaunt;
     int lastpickup, lastpickupmillis, lastbase, lastrepammo, flagpickup;
@@ -657,7 +656,7 @@ namespace game
     extern string clientmap;
     extern bool intermission;
     extern int maptime, maprealtime, maplimit;
-    extern fpsent *player1;
+    extern fpsent *player1, qplayer;
     extern vector<fpsent *> players, clients;
     extern int lastspawnattempt;
     extern int lasthit;

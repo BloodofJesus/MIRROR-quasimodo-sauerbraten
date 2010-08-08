@@ -676,15 +676,13 @@ namespace game
 
     static void sendposition(fpsent *d, packetbuf &q)
     {
-		int quasileapmode = getvar("quasileapmode");
+		conoutf(CON_GAMEINFO,"X %f Y %f Z %f",d->o.x,d->o.y,d->o.z);
         putint(q, N_POS);
         putuint(q, d->clientnum);
         // 3 bits phys state, 1 bit life sequence, 2 bits move, 2 bits strafe
         uchar physstate = d->physstate | ((d->lifesequence&1)<<3) | ((d->move&3)<<4) | ((d->strafe&3)<<6);
         q.put(physstate);
-		ivec o;
-		if(d->state == CS_QLEAP && (quasileapmode == 0 || quasileapmode == 2)) o = ivec(vec(d->qo.x, d->qo.y, d->qo.z-d->eyeheight).mul(DMF)); //Use the Restore position.
-		else o = ivec(vec(d->o.x, d->o.y, d->o.z-d->eyeheight).mul(DMF));
+		ivec o = ivec(vec(d->o.x, d->o.y, d->o.z-d->eyeheight).mul(DMF));
         uint vel = min(int(d->vel.magnitude()*DVELF), 0xFFFF), fall = min(int(d->falling.magnitude()*DVELF), 0xFFFF);
         // 3 bits position, 1 bit velocity, 3 bits falling, 1 bit material
         uint flags = 0;
@@ -755,7 +753,8 @@ namespace game
 					} else continue;
 				}
                 packetbuf q(100);
-                sendposition(d, q);
+				if(d->state == CS_QLEAP) sendposition(&qplayer,q); //Send the stored location.
+                else sendposition(d, q);
                 for(int j = i+1; j < players.length(); j++)
                 {
                     fpsent *d = players[j];

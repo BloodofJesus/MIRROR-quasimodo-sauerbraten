@@ -671,6 +671,7 @@ namespace game
     extern fpsent *newclient(int cn);
     extern const char *colorname(fpsent *d, const char *name = NULL, const char *prefix = "");
     extern fpsent *pointatplayer();
+	extern fpsent *pointingatplayer(fpsent *d);
     extern fpsent *hudplayer();
     extern fpsent *followingplayer();
     extern void stopfollowing();

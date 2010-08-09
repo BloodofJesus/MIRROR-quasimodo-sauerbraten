@@ -858,6 +858,8 @@ namespace game
 
 	void quasiattackbot(fpsent *d, vec targ)
 	{
+		//fpsent *danger = pointingatplayer(d);
+		//if(danger != NULL) conoutf(CON_GAMEINFO,"Aiming: %s",danger->name);
 		if((d->qattackbot == false && quasiattackon == 0) || quasiattackmode < 1 || quasiattackmode > 2) {qaimbotenemy = NULL; return;}
 
 		//When always on pause the bot when active.

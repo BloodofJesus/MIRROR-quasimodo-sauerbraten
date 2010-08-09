@@ -118,6 +118,18 @@ namespace game
         return NULL;
     }
 
+	//Find a player who is pointing at d.
+	fpsent *pointingatplayer(fpsent *d = player1)
+	{
+		vec pworldpos;
+		loopv(players)
+		{
+			vecfromyawpitch(players[i]->yaw,players[i]->pitch,0,0,pworldpos);
+			if(players[i] != d && players[i]->state == CS_ALIVE && !isteam(players[i]->team, d->team) && intersect(d,players[i]->o,pworldpos)) return players[i];
+		}
+		return NULL;
+	}
+
     void stopfollowing()
     {
         if(following<0) return;

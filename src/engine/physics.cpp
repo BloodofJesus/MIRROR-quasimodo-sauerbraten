@@ -1679,6 +1679,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             if(quasijumphackenabled == 0 || quasijumphackairjump == 0) pl->vel.z = max(pl->vel.z, (quasijumphackenabled == 1? qjumpvel:JUMPVEL)); // physics impulse upwards
 			else if(quasijumphackenabled == 1 && quasijumphackairjump == 1) {
 				pl->falling = vec(0,0,0);
+				pl->physstate = PHYS_FALL;
 				pl->timeinair = 0;
 				pl->vel.z += qjumpvel;
 			}

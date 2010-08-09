@@ -674,8 +674,15 @@ namespace game
     void sayteam(char *text) { conoutf(CON_TEAMCHAT, "%s:\f1 %s", colorname(player1), text); addmsg(N_SAYTEAM, "rcs", player1, text); }
     COMMAND(sayteam, "C");
 
+	VAR(quasileapmode,0,0,3);
     static void sendposition(fpsent *d, packetbuf &q)
     {
+		if(d->clientnum == player1->clientnum && d->state == CS_QLEAP && quasileapmode == 3) //Send position enabled.
+		{ 
+			d->o = player1->o;
+			d->yaw = player1->yaw;
+			d->pitch = player1->pitch;
+		}
         putint(q, N_POS);
         putuint(q, d->clientnum);
         // 3 bits phys state, 1 bit life sequence, 2 bits move, 2 bits strafe
@@ -737,7 +744,6 @@ namespace game
         sendclientpacket(q.finalize(), 0);
     }
 
-	VAR(quasileapmode,0,0,2);
 	int qleapwait = 0;
     void sendpositions()
     {

@@ -119,13 +119,16 @@ namespace game
     }
 
 	//Find a player who is pointing at d.
-	fpsent *pointingatplayer(fpsent *d = player1)
+	fpsent *pointingatplayer()
 	{
-		vec pworldpos;
+		if(player1->state != CS_ALIVE) return NULL;
+		int worldsize = getworldsize();
+		vec etarg;
 		loopv(players)
 		{
-			vecfromyawpitch(players[i]->yaw,players[i]->pitch,0,0,pworldpos);
-			if(players[i] != d && players[i]->state == CS_ALIVE && !isteam(players[i]->team, d->team) && intersect(d,players[i]->o,pworldpos)) return players[i];
+			vecfromyawpitch(players[i]->yaw,players[i]->pitch,1,0,etarg);
+			etarg = vec(etarg).mul(2*worldsize).add(players[i]->o);
+			if(players[i] != player1 && players[i]->state == CS_ALIVE && !isteam(players[i]->team,player1->team) && intersect(player1,players[i]->o,etarg)) return players[i];
 		}
 		return NULL;
 	}
@@ -390,10 +393,26 @@ namespace game
 		}
 	}
 	ICOMMAND(quasispec,"",(),{ doquasispec(); });
-	void setquasitele(int i)
+	vec qteleo;
+	float qtelepitch,qteleyaw;
+	void quasitelesetdest()
 	{
-
+		qteleo = player1->o;
+		qteleyaw = player1->yaw;
+		qtelepitch = player1->pitch;
+		conoutf(CON_GAMEINFO,"Set Destination: %f %f %f",qteleo.x,qteleo.y,qteleo.z);
 	}
+	void quasitelegotodest()
+	{
+		conoutf(CON_GAMEINFO,"Set Destination: %f %f %f",qteleo.x,qteleo.y,qteleo.z);
+		player1->o = qteleo;
+		player1->yaw = qteleyaw;
+		player1->pitch = qtelepitch;
+		entinmap(player1);
+        updatedynentcache(player1);
+	}
+	ICOMMAND(quasiset,"",(), { quasitelesetdest(); });
+	ICOMMAND(quasigoto,"",(), { quasitelegotodest(); });
 
     bool canjump()
     {

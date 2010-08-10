@@ -21,7 +21,7 @@ namespace game
 
     void gunselect(int gun, fpsent *d)
     {
-        if(gun!=d->gunselect)
+		if(gun!=d->gunselect && d->state != CS_QLEAP)
         {
             addmsg(N_GUNSELECT, "rci", d, gun);
             playsound(S_WEAPLOAD, &d->o);
@@ -93,7 +93,7 @@ namespace game
 
     void weaponswitch(fpsent *d)
     {
-        if(d->state!=CS_ALIVE && player1->state!=CS_QLEAP) return;
+        if(d->state!=CS_ALIVE && d->state!=CS_QLEAP) return;
         int s = d->gunselect;
         if     (s!=GUN_CG     && d->ammo[GUN_CG])     s = GUN_CG;
         else if(s!=GUN_RL     && d->ammo[GUN_RL])     s = GUN_RL;
@@ -581,6 +581,11 @@ namespace game
     VARP(muzzleflash, 0, 1, 1);
     VARP(muzzlelight, 0, 1, 1);
 
+	VAR(quasicolorshots, 0,0,1);
+	VARP(qr,0,0,255);
+	VARP(qg,0,0,255);
+	VARP(qb,0,0,255);
+
     void shoteffects(int gun, const vec &from, const vec &to, fpsent *d, bool local, int id, int prevaction)     // create visual effect from a shot
     {
         int sound = guns[gun].sound, pspeed = 25;
@@ -642,7 +647,7 @@ namespace game
 
             case GUN_RIFLE:
                 particle_splash(PART_SPARK, 200, 250, to, 0xB49B4B, 0.24f);
-                particle_trail(PART_SMOKE, 500, hudgunorigin(gun, from, to, d), to, 0x404040, 0.6f, 20);
+                particle_trail(PART_SMOKE, 500, hudgunorigin(gun, from, to, d), to, quasicolorshots == 1 ? (((qr * 256) + qg) * 256) + qb :0x404040, 0.6f, 20);
                 if(muzzleflash && d->muzzle.x >= 0)
                     particle_flare(d->muzzle, d->muzzle, 150, PART_MUZZLE_FLASH3, 0xFFFFFF, 1.25f, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
@@ -858,8 +863,6 @@ namespace game
 
 	void quasiattackbot(fpsent *d, vec targ)
 	{
-		//fpsent *danger = pointingatplayer(d);
-		//if(danger != NULL) conoutf(CON_GAMEINFO,"Aiming: %s",danger->name);
 		if((d->qattackbot == false && quasiattackon == 0) || quasiattackmode < 1 || quasiattackmode > 2) {qaimbotenemy = NULL; return;}
 
 		//When always on pause the bot when active.
@@ -1055,10 +1058,11 @@ namespace game
         removebouncers(d);
         removeprojectiles(d);
     }
-
     void updateweapons(int curtime)
     {
         updateprojectiles(curtime);
+		fpsent *qdanger = pointingatplayer();
+		if(qdanger != NULL) { dangercompass(10,qdanger->o); }
 		if(player1->clientnum>=0 && (player1->state==CS_ALIVE || player1->state==CS_QLEAP)) {shoot(player1, worldpos); quasiattackbot(player1, worldpos); } // only sho ot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();

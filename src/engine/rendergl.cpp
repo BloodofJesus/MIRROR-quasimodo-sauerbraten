@@ -1924,8 +1924,10 @@ VARP(damagecompasssize, 1, 30, 100);
 VARP(damagecompassalpha, 1, 25, 100);
 VARP(damagecompassmin, 1, 25, 1000);
 VARP(damagecompassmax, 1, 200, 1000);
+VAR(quasidangerenabled,0,0,1);
 
 float dcompass[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+float qdcompass[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 void damagecompass(int n, const vec &loc)
 {
     if(!usedamagecompass) return;
@@ -1940,6 +1942,22 @@ void damagecompass(int n, const vec &loc)
     int dir = (int(yaw+22.5f)%360)/45;
     dcompass[dir] += max(n, damagecompassmin)/float(damagecompassmax);
     if(dcompass[dir]>1) dcompass[dir] = 1;
+
+}
+void dangercompass(int n, const vec &loc)
+{
+    if(quasidangerenabled == 0) return;
+    vec delta(loc);
+    delta.sub(camera1->o); 
+    float yaw, pitch;
+    if(delta.magnitude()<4) yaw = camera1->yaw;
+    else vectoyawpitch(delta, yaw, pitch);
+    yaw -= camera1->yaw;
+    if(yaw >= 360) yaw = fmod(yaw, 360);
+    else if(yaw < 0) yaw = 360 - fmod(-yaw, 360);
+    int dir = (int(yaw+22.5f)%360)/45;
+    qdcompass[dir] += max(n, damagecompassmin)/float(damagecompassmax);
+    if(qdcompass[dir]>1) qdcompass[dir] = 1;
 
 }
 void drawdamagecompass(int w, int h)
@@ -1973,6 +1991,39 @@ void drawdamagecompass(int w, int h)
         // fade in log space so short blips don't disappear too quickly
         scale -= float(curtime)/damagecompassfade;
         dcompass[i] = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
+    }
+}
+void drawdangercompass(int w, int h)
+{
+    int dirs = 0;
+    float size = damagecompasssize/100.0f*min(h, w)/2.0f;
+    loopi(8) if(qdcompass[i]>0)
+    {
+        if(!dirs)
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glColor4f(1, 1, 1, damagecompassalpha/100.0f);
+        }
+        dirs++;
+
+        glPushMatrix();
+        glTranslatef(w/2, h/2, 0);
+        glRotatef(i*45, 0, 0, 1);
+        glTranslatef(0, -size/2.0f-min(h, w)/4.0f, 0);
+        float logscale = 32,
+              scale = log(1 + (logscale - 1)*qdcompass[i]) / log(logscale);
+        glScalef(size*scale, size*scale, 0);
+
+        glBegin(GL_TRIANGLES);
+        glVertex3f(1, 1, 0);
+        glVertex3f(-1, 1, 0);
+        glVertex3f(0, 0, 0);
+        glEnd();
+        glPopMatrix();
+
+        // fade in log space so short blips don't disappear too quickly
+        scale -= float(curtime)/damagecompassfade;
+        qdcompass[i] = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
     }
 }
 
@@ -2178,6 +2229,7 @@ void gl_drawhud(int w, int h)
     {
         drawdamagescreen(w, h);
         drawdamagecompass(w, h);
+		drawdangercompass(w, h);
     }
 
     glEnable(GL_TEXTURE_2D);

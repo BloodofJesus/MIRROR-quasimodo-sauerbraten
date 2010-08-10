@@ -202,6 +202,7 @@ extern vec calcavatarpos(const vec &pos, float dist);
 
 extern void damageblend(int n);
 extern void damagecompass(int n, const vec &loc);
+extern void dangercompass(int n, const vec &loc);
 
 extern vec minimapcenter, minimapradius, minimapscale;
 extern void bindminimap();

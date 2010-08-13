@@ -899,16 +899,18 @@ namespace game
             if(ammohud) drawammohud(d);
         }
     }
-
+	VARP(quasinameplayers,0,0,1);
+	fpsent qnameplayer;
     void gameplayhud(int w, int h)
     {
         glPushMatrix();
         glScalef(h/1800.0f, h/1800.0f, 1);
 
-        if(player1->state==CS_SPECTATOR)
+		int pw,ph;
+		text_bounds("  ", pw, ph);
+		if(player1->state==CS_SPECTATOR)
         {
-            int pw, ph, tw, th, fw, fh;
-            text_bounds("  ", pw, ph);
+            int tw, th, fw, fh;
             text_bounds("SPECTATOR", tw, th);
             th = max(th, ph);
             fpsent *f = followingplayer();
@@ -919,8 +921,7 @@ namespace game
         }
 		else if(player1->state == CS_QLEAP)
 		{
-			int pw, ph, tw, th, fw, fh;
-            text_bounds("  ", pw, ph);
+			int tw, th, fw, fh;
             text_bounds("QUASIMODO LEAP", tw, th);
             th = max(th, ph);
             fpsent *f = followingplayer();
@@ -928,6 +929,12 @@ namespace game
             fh = max(fh, ph);
             draw_text("QUASIMODO LEAP", w*1800/h - tw - pw, 1650 - th - fh);
             if(f) draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh);
+		}
+
+		if(quasinameplayers == 1) {
+			fpsent *t = pointatplayer();
+			if(t) qnameplayer = *t;
+			if(qnameplayer.name != "") draw_text(qnameplayer.name, 0, 900-ph);
 		}
 
         fpsent *d = hudplayer();

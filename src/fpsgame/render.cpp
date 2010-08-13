@@ -130,7 +130,8 @@ namespace game
 	VAR(quasiwallhackenabled,0,0,1);
 	VAR(quasiwallhackteam,0,0,1);
 	VARP(quasiwallhackalpha,0,70,100);
-    void renderplayer(fpsent *d, const playermodelinfo &mdl, int team, float fade, bool mainpass)
+
+    void renderplayer(fpsent *d, const playermodelinfo &mdl, int team, float fade, bool mainpass, bool thirdperson = false)
     {
         int lastaction = d->lastaction, hold = mdl.vwep || d->gunselect==GUN_PISTOL ? 0 : (ANIM_HOLD1+d->gunselect)|ANIM_LOOP, attack = ANIM_ATTACK1+d->gunselect, delay = mdl.vwep ? 300 : guns[d->gunselect].attackdelay+50;
         if(intermission && d->state!=CS_DEAD)
@@ -183,7 +184,7 @@ namespace game
 			case 1: mdlname = mdl.blueteam; qmdlname = mdl.blueteam; break;
             case 2: mdlname = mdl.redteam; break;
         }
-        renderclient(d, mdlname, a[0].tag ? a : NULL, hold, attack, delay, lastaction, intermission && d->state!=CS_DEAD ? 0 : d->lastpain, fade, ragdoll && mdl.ragdoll, (quasiwallhackenabled == 1 && (qmdlname != mdl.blueteam || quasiwallhackteam == 1)) ? qmdlname : NULL, quasiwallhackalpha/100.0f);
+        renderclient(d, mdlname, a[0].tag ? a : NULL, hold, attack, delay, lastaction, intermission && d->state!=CS_DEAD ? 0 : d->lastpain, fade, ragdoll && mdl.ragdoll, (quasiwallhackenabled == 1 && (qmdlname != mdl.blueteam || quasiwallhackteam == 1)) ? qmdlname : NULL, quasiwallhackalpha/100.0f, thirdperson);
 #if 0
         if(d->state!=CS_DEAD && d->quadmillis) 
         {
@@ -231,7 +232,7 @@ namespace game
                 fade -= clamp(float(lastmillis - (d->lastupdate + max(ragdollmillis - ragdollfade, 0)))/min(ragdollmillis, ragdollfade), 0.0f, 1.0f);
             renderplayer(d, getplayermodelinfo(d), team, fade, mainpass);
         } 
-        if(isthirdperson() && !followingplayer()) renderplayer(player1, getplayermodelinfo(player1), teamskins || m_teammode ? 1 : 0, 1, mainpass);
+        if(isthirdperson() && !followingplayer()) renderplayer(player1, getplayermodelinfo(player1), teamskins || m_teammode ? 1 : 0, 1, mainpass,true);
         rendermonsters();
         rendermovables();
         entities::renderentities();

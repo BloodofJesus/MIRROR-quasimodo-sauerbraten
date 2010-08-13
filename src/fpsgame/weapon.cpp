@@ -793,12 +793,11 @@ namespace game
         if(d->gunselect) d->ammo[d->gunselect]--;
         vec from = d->o;
         vec to = targ;
-
         vec unitv;
         float dist = to.dist(from, unitv);
         unitv.div(dist);
         vec kickback(unitv);
-        kickback.mul(guns[d->gunselect].kickamount*-2.5f*quasigunkickback);
+        kickback.mul(max(guns[d->gunselect].kickamount,(short) 1)*-2.5f*quasigunkickback);
         d->vel.add(kickback);
         float shorten = 0;
         if(guns[d->gunselect].range && dist > guns[d->gunselect].range)
@@ -822,7 +821,7 @@ namespace game
 
         shoteffects(d->gunselect, from, to, d, true, 0, prevaction);
 
-        if(d==player1 || d->ai)
+        if(d==player1 || d->ai && false)
         {
             addmsg(N_SHOOT, "rci2i6iv", d, lastmillis-maptime, d->gunselect,
                    (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
@@ -890,8 +889,7 @@ namespace game
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL; //Not alive any more so unlock.
 				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, targ, (d->gunselect == GUN_FIST ? 2048 : guns[d->gunselect].range), quasiattackpitch, quasiattackyaw))
 				{
-					targ = qaimbotenemy->o;
-					//Move the cursor to the target
+					targ = qaimbotenemy->o; //Without this the aimbot misses ~50% of shots because shoot() is called before the new pitch and yaw are calculated into the worldpos.
 					ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
 
 					if(quasiattackshoot == 1) d->attacking = true;

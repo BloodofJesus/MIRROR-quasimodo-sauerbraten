@@ -446,6 +446,7 @@ void setupmaterials(int start, int len)
 }
 
 VARP(showmat, 0, 1, 1);
+VAR(quasishowmat,0,0,1);
 
 static int sortdim[3];
 static ivec sortorigin;
@@ -504,7 +505,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
         loopi(va->matsurfs)
         {
             materialsurface &m = va->matbuf[i];
-            if(!editmode || !showmat || envmapping)
+            if((!editmode || !showmat || envmapping) && quasishowmat==0)
             {
                 if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>worldsize))) continue;
                 if(m.flags&materialsurface::F_EDIT) continue;
@@ -514,7 +515,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
             vismats.add(&m);
         }
     }
-    vismats.sort(editmode && showmat && !envmapping ? editmatcmp : vismatcmp);
+    vismats.sort((editmode && showmat && !envmapping) || quasishowmat==1 ? editmatcmp : vismatcmp);
 }
 
 void rendermatgrid(vector<materialsurface *> &vismats)
@@ -579,7 +580,6 @@ void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offs
 }
 
 VARFP(waterfallenv, 0, 1, 1, preloadwatershaders());
-
 void rendermaterials()
 {
     vector<materialsurface *> vismats;
@@ -612,7 +612,7 @@ void rendermaterials()
     float oldfogc[4];
     glGetFloatv(GL_FOG_COLOR, oldfogc);
     int lastfogtype = 1;
-    if(editmode && showmat && !envmapping)
+    if((editmode && showmat && !envmapping) || quasishowmat == 1)
     {
         glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
         glEnable(GL_BLEND); blended = true;
@@ -878,7 +878,7 @@ void rendermaterials()
     if(blended) glDisable(GL_BLEND);
     if(overbright) resettmu(0);
     if(!lastfogtype) glFogfv(GL_FOG_COLOR, oldfogc);
-    if(editmode && showmat && !envmapping)
+    if((editmode && showmat && !envmapping) || quasishowmat == 1)
     {
         foggedlineshader->set();
         rendermatgrid(vismats);

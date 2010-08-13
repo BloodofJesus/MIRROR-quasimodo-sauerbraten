@@ -1062,6 +1062,7 @@ static inline bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c
     }
 }
 
+VAR(quasinoclip,0,0,1);
 static inline bool octacollide(physent *d, const vec &dir, float cutoff, const ivec &bo, const ivec &bs, cube *c, const ivec &cor, int size) // collide with octants
 {
     loopoctabox(cor, size, bo, bs)
@@ -1079,7 +1080,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
             {
                 case MAT_NOCLIP: continue;
                 case MAT_GAMECLIP: if(d->type==ENT_AI) solid = true; break;
-                case MAT_CLIP: if(isclipped(c[i].ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
+                case MAT_CLIP: if((isclipped(c[i].ext->material&MATF_VOLUME) || d->type<ENT_CAMERA)&& quasinoclip == 0) solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
             if(!cubecollide(d, dir, cutoff, c[i], o, size, solid)) return false;
@@ -1681,7 +1682,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 				pl->falling = vec(0,0,0);
 				pl->physstate = PHYS_FALL;
 				pl->timeinair = 0;
-				pl->vel.z += qjumpvel;
+				pl->vel.add(vec(0,0,qjumpvel));
 			}
             if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
 
@@ -1719,7 +1720,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
         else if(!water && game::allowmove(pl) && pl->state != CS_QLEAP) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f) *(quasispeedhackenabled == 1?quasispeedhackspeed:1)); // EXPERIMENTAL
 		else if(pl->state == CS_QLEAP && !water && game::allowmove(pl)) d.mul(quasileapspeed/100.0f);
     }
-    float fric = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);
+    float fric = water && !floating && pl->state != CS_QLEAP && quasispeedhackenabled == 0 ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);
     pl->vel.lerp(d, pl->vel, pow(1 - 1/fric, curtime/20.0f));
 // old fps friction
 //    float friction = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);

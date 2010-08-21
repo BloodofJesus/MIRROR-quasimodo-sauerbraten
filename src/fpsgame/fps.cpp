@@ -9,7 +9,6 @@ namespace game
 	VAR(quasiradarhackenabled,0,0,1);
 	VAR(quasiradarhackteam,0,0,1);
 	VAR(quasiradarhackspawn,0,0,1);
-	VARR(NFO_quasiwhichteam,0,0,2);
 	
 
     int following = -1, followdir = 0;
@@ -128,7 +127,7 @@ namespace game
 		{
 			vecfromyawpitch(players[i]->yaw,players[i]->pitch,1,0,etarg);
 			etarg = vec(etarg).mul(2*worldsize).add(players[i]->o);
-			if(players[i] != player1 && players[i]->state == CS_ALIVE && !isteam(players[i]->team,player1->team) && intersect(player1,players[i]->o,etarg)) return players[i];
+			if(players[i] != player1 && players[i]->state == CS_ALIVE && !isteam(players[i]->team,player1->team) && qintersect(player1,players[i]->o,etarg)) return players[i];
 		}
 		return NULL;
 	}
@@ -899,8 +898,94 @@ namespace game
             if(ammohud) drawammohud(d);
         }
     }
+
+	void qdrawradar(float x, float y, float s)
+    {
+        glBegin(GL_TRIANGLE_STRIP);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
+        glEnd();
+    }
+
+	float qcalcradarscale()
+    {
+        //return radarscale<=0 || radarscale>maxradarscale ? maxradarscale : max(radarscale, float(minradarscale));
+        return clamp(max(minimapradius.x, minimapradius.y)/3, float(getvar("minradarscale")), float(getvar("maxradarscale")));
+    }
+
+	void qdrawblip(fpsent *d, float x, float y, float s, const vec &pos, bool flagblip, bool cutoff = false)
+    {
+        float scale = qcalcradarscale();
+        vec dir = d->o;
+        dir.sub(pos).div(scale);
+        float size = flagblip ? 0.1f : 0.05f,
+              xoffset = flagblip ? -2*(3/32.0f)*size : -size,
+              yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
+              dist = dir.magnitude2(), maxdist = 1 - 0.05f - 0.05f;
+        if(dist >= maxdist) dir.mul(maxdist/dist);
+        dir.rotate_around_z(-camera1->yaw*RAD);
+        if(dist < maxdist || (dist >= maxdist && cutoff == false)) qdrawradar(x + s*0.5f*(1.0f + dir.x + xoffset), y + s*0.5f*(1.0f + dir.y + yoffset), size*s);
+    }
+
+    void qdrawminimap(fpsent *d, float x, float y, float s)
+    {
+        vec pos = vec(d->o).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
+        vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
+        float scale = qcalcradarscale();
+        glBegin(GL_TRIANGLE_FAN);
+        loopi(16)
+        {
+            vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
+            glTexCoord2f(pos.x + tc.x*scale*minimapscale.x, pos.y + tc.y*scale*minimapscale.y);
+            vec v = vec(0, -1, 0).rotate_around_z(i/16.0f*2*M_PI);
+            glVertex2f(x + 0.5f*s*(1.0f + v.x), y + 0.5f*s*(1.0f + v.y));
+        }
+        glEnd();
+    }
+
+	void qdrawotherhud(fpsent *d, int w, int h)
+    {
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        int s = 1800/4, x = 1800*w/h - s - s/10, y = s/10;
+        glColor4f(1, 1, 1, 1/*minimapalpha*/);
+        if(1 /*minimapalpha*/>= 1) glDisable(GL_BLEND);
+        bindminimap();
+        qdrawminimap(d, x, y, s);
+        if(1 /*minimapalpha*/ >= 1) glEnable(GL_BLEND);
+        glColor3f(1, 1, 1);
+        float margin = 0.04f, roffset = s*margin, rsize = s + 2*roffset;
+        settexture("packages/hud/radar.png", 3);
+        qdrawradar(x - roffset, y - roffset, rsize);
+		if(quasiradarhackenabled == 1)
+		{
+			if(quasiradarhackspawn == 1)
+			{
+				const vector<extentity *> &qents = entities::getents();
+				loopv(qents)
+				{
+					if(qents[i]->type == ET_PLAYERSTART &&  qents[i]->attr2 == 0) { //Make sure it's a player spawn, and the correct mode.
+						settexture("quasimodo/sdot_blue.png", 1);
+						qdrawblip(d, x, y, s, qents[i]->o, false, true);
+					}
+				}
+			}
+			loopv(players)
+			{
+				if(players[i] == player1 || (isteam(players[i]->team,player1->team) && quasiradarhackteam == 0) || (players[i]->state != CS_ALIVE && players[i]->state != CS_EDITING)) continue;
+				if(isteam(players[i]->team,player1->team)) settexture("quasimodo/dot_blue.png", 2);
+				else settexture("quasimodo/dot_red.png", 2);
+				qdrawblip(d, x, y, s, players[i]->o, false);
+			}
+		}
+    }
+
 	VARP(quasinameplayers,0,0,1);
 	fpsent qnameplayer;
+
+
     void gameplayhud(int w, int h)
     {
         glPushMatrix();
@@ -936,12 +1021,13 @@ namespace game
 			if(t) qnameplayer = *t;
 			if(qnameplayer.name != "") draw_text(qnameplayer.name, 0, 900-ph);
 		}
-
+		draw_textf("\f6Frags: \f3%d \f6Deaths: \f3%d \f6Acc: \f3%d%%\n\f1TotalDamage: \f3%d \f1TotalShots: \f3%d", 1000, 50, player1->frags, player1->deaths, (player1->totaldamage*100)/max(player1->totalshots, 1), player1->totaldamage, player1->totalshots);
         fpsent *d = hudplayer();
         if(d->state!=CS_EDITING)
         {
             if(d->state!=CS_SPECTATOR) drawhudicons(d);
             if(cmode) cmode->drawhud(d, w, h);
+			else if(quasiradarhackenabled == 1) qdrawotherhud(d, w, h);
         }
 
         glPopMatrix();

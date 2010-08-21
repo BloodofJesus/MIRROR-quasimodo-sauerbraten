@@ -952,7 +952,6 @@ namespace game
                 return;
         }
     }
-
     void parsestate(fpsent *d, ucharbuf &p, bool resume = false)
     {
         if(!d) { static fpsent dummy; d = &dummy; }
@@ -1203,7 +1202,7 @@ namespace game
                 }
                 if(cmode) cmode->respawned(s);
 				ai::spawned(s);
-                addmsg(N_SPAWN, "rcii", s, s->lifesequence, s->gunselect);
+                addmsg(N_SPAWN, "rcii", s, s->lifesequence, s == player1 && getvar("quasigunmental") == 1 ? GUN_FIST : s->gunselect);
                 break;
             }
 
@@ -1547,8 +1546,6 @@ namespace game
                 if(!w) return;
                 filtertext(w->team, text, false, MAXTEAMLEN);
                 static const char *fmt[2] = { "%s switched to team %s", "%s forced to team %s"};
-				//Give quasimodo the team number.
-				if(w == player1) setvar("NFO_quasiwhichteam",ctfteamflag(w->team));
                 if(reason >= 0 && size_t(reason) < sizeof(fmt)/sizeof(fmt[0]))
                     conoutf(fmt[reason], colorname(w), w->team);
                 break;

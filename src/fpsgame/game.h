@@ -664,7 +664,7 @@ namespace game
     extern int following;
     extern int smoothmove, smoothdist;
 
-	extern int quasiradarhackenabled,quasiradarhackteam,quasiradarhackspawn,NFO_quasiwhichteam;
+	extern int quasiradarhackenabled,quasiradarhackteam,quasiradarhackspawn;
 
     extern bool clientoption(const char *arg);
     extern fpsent *getclient(int cn);
@@ -739,6 +739,7 @@ namespace game
     extern void gibeffect(int damage, const vec &vel, fpsent *d);
     extern float intersectdist;
     extern bool intersect(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
+	extern bool qintersect(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
     extern dynent *intersectclosest(const vec &from, const vec &to, fpsent *at, float &dist = intersectdist);
     extern void clearbouncers();
     extern void updatebouncers(int curtime);

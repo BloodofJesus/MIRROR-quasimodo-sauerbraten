@@ -455,6 +455,62 @@ struct captureclientmode : clientmode
         }
         if(blips && !basenumbers) glEnd();
     }
+	void qdrawplayers(fpsent *d, int fw, int fh, bool team = false)
+    {
+        float scale = calcradarscale();
+		float blipsize = 0.05f;
+        int blips = 0;
+        loopv(players)
+        {
+			fpsent *p = players[i];
+			if(p == player1 || isteam(p->team,player1->team) != team || (p->state != CS_ALIVE && p->state != CS_EDITING)) continue;
+            vec dir(d->o);
+            dir.sub(p->o).div(scale);
+            float dist = dir.magnitude2(), maxdist = 1 - 0.05f - blipsize;
+            if(dist >= maxdist) dir.mul(maxdist/dist);
+            dir.rotate_around_z(-camera1->yaw*RAD);
+
+
+            if(!blips) glBegin(GL_QUADS);
+            float x = 0.5f*(dir.x*fw/blipsize - fw), y = 0.5f*(dir.y*fh/blipsize - fh);
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(x,    y);
+            glTexCoord2f(1.0f, 0.0f); glVertex2f(x+fw, y);
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(x+fw, y+fh);
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(x,    y+fh);
+            
+            blips++;
+        }
+        if(blips) glEnd();
+    }
+	void qdrawspawns(fpsent *d, int fw, int fh, bool team = false)
+    {
+        float scale = calcradarscale();
+		float blipsize = 0.05f;
+        int blips = 0;
+		const vector<extentity *> &qents = entities::getents();
+        loopv(qents)
+        {
+			extentity *e = qents[i];
+			if(e->type != ET_PLAYERSTART || e->attr2 != 0) continue;
+            vec dir(d->o);
+            dir.sub(e->o).div(scale);
+            float dist = dir.magnitude2(), maxdist = 1 - 0.05f - blipsize;
+            if(dist >= maxdist) continue;
+
+            dir.rotate_around_z(-camera1->yaw*RAD);
+
+
+            if(!blips) glBegin(GL_QUADS);
+            float x = 0.5f*(dir.x*fw/blipsize - fw), y = 0.5f*(dir.y*fh/blipsize - fh);
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(x,    y);
+            glTexCoord2f(1.0f, 0.0f); glVertex2f(x+fw, y);
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(x+fw, y+fh);
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(x,    y+fh);
+            
+            blips++;
+        }
+        if(blips) glEnd();
+    }
 
     int respawnwait(fpsent *d)
     {
@@ -535,6 +591,16 @@ struct captureclientmode : clientmode
         else settexture("packages/hud/blip_red.png", 3);
         drawblips(d, blipsize, fw, fh, -1, showenemies);
         if(showenemies) drawblips(d, blipsize, fw, fh, -2);
+		if(quasiradarhackenabled == 1)
+		{
+			settexture("quasimodo/dot_red.png", 2);
+			qdrawplayers(d, fw, fh, false);
+			settexture("quasimodo/dot_blue.png", 2);
+			if(quasiradarhackteam == 1) qdrawplayers(d, fw, fh, true);
+			//Always spawn from 0 so all spawns blue.
+			settexture("quasimodo/sdot_blue.png", 2);
+			if(quasiradarhackspawn == 1) qdrawspawns(d, fw, fh, true);
+		}
         glPopMatrix();
         if(basenumbers) popfont();
         if(d->state == CS_DEAD)

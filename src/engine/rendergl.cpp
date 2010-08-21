@@ -1568,8 +1568,7 @@ void clipminimap(ivec &bbmin, ivec &bbmax, cube *c = worldroot, int x = 0, int y
 
 void drawminimap()
 {
-    if(!game::needminimap()) { clearminimap(); return; }
-
+    //if(!game::needminimap()) { clearminimap(); return; }
     renderprogress(0, "generating mini-map...", 0, !renderedframe);
 
     int size = 1<<minimapsize, sizelimit = min(hwtexsize, min(screen->w, screen->h));
@@ -1957,7 +1956,7 @@ void dangercompass(int n, const vec &loc)
     else if(yaw < 0) yaw = 360 - fmod(-yaw, 360);
     int dir = (int(yaw+22.5f)%360)/45;
     qdcompass[dir] += max(n, damagecompassmin)/float(damagecompassmax);
-    if(qdcompass[dir]>1) qdcompass[dir] = 1;
+    if(qdcompass[dir]>1) qdcompass[dir] = float(n)/100.0f;
 
 }
 void drawdamagecompass(int w, int h)

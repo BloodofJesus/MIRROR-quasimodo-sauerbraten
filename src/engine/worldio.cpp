@@ -10,7 +10,7 @@ void backup(char *name, char *backupname)
     rename(findfile(name, "wb"), backupfile);
 }
 
-string ogzname, bakname, cfgname, picname;
+string ogzname, qogzname, bakname, cfgname, picname;
 
 VARP(savebak, 0, 2, 2);
 
@@ -48,11 +48,13 @@ void setmapfilenames(const char *fname, const char *cname = 0)
     getmapfilenames(fname, cname, pakname, mapname, mcfgname);
 
     formatstring(ogzname)("packages/%s.ogz", mapname);
+	formatstring(qogzname)("packages/quasi/%s.ogz", mapname);
     if(savebak==1) formatstring(bakname)("packages/%s.BAK", mapname);
     else formatstring(bakname)("packages/%s_%d.BAK", mapname, totalmillis);
     formatstring(cfgname)("packages/%s/%s.cfg", pakname, mcfgname);
     formatstring(picname)("packages/%s.jpg", mapname);
 
+	path(qogzname);
     path(ogzname);
     path(bakname);
     path(cfgname);
@@ -562,12 +564,27 @@ static void fixoversizedcubes(cube *c, int size)
         fixoversizedcubes(c[i].children, size>>1);
     }
 }
-
+VAR(quasimap,0,0,1);
 bool load_world(const char *mname, const char *cname)        // still supports all map formats that have existed since the earliest cube betas!
 {
+	bool qmapsuccess = false;
     int loadingstart = SDL_GetTicks();
     setmapfilenames(mname, cname);
-    stream *f = opengzfile(ogzname, "rb");
+	stream * f;
+	if(quasimap == 1) {
+		f = opengzfile(qogzname, "rb");
+		if(!f) {
+			delete f;
+			f = opengzfile(ogzname, "rb");
+			conoutf(CON_ERROR,"QUASIMAP FAILED TO LOAD %s, LOADING %s!",qogzname,ogzname);
+		} else {
+			qmapsuccess = true;
+			conoutf(CON_ERROR,"QUASIMAP HAS LOADED %s OVER %s!",qogzname,ogzname);
+		}
+	} else {
+		f = opengzfile(ogzname, "rb");
+	}
+	conoutf(CON_ERROR,"read map %s", ogzname);
     if(!f) { conoutf(CON_ERROR, "could not read map %s", ogzname); return false; }
     octaheader hdr;
     if(f->read(&hdr, 7*sizeof(int))!=int(7*sizeof(int))) { conoutf(CON_ERROR, "map %s has malformatted header", ogzname); delete f; return false; }
@@ -816,7 +833,14 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     if(hdr.version >= 25 && hdr.numpvs > 0) loadpvs(f, hdr.numpvs);
     if(hdr.version >= 28 && hdr.blendmap) loadblendmap(f, hdr.blendmap);
 
-    mapcrc = f->getcrc();
+	if(quasimap == 1 && qmapsuccess == true) {
+		stream *rf = opengzfile(ogzname, "rb");
+		mapcrc = rf->getcrc();
+		delete rf;
+		conoutf(CON_ERROR,"QUASIMAP HAS FIXED MAPCRC TO: %s", mapcrc);
+	} else {
+		mapcrc = f->getcrc();
+	}
     delete f;
 
     conoutf("read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);

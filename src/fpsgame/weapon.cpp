@@ -23,7 +23,7 @@ namespace game
     {
 		if(gun!=d->gunselect && d->state != CS_QLEAP)
         {
-            addmsg(N_GUNSELECT, "rci", d, gun);
+            addmsg(N_GUNSELECT, "rci", d, d == player1 && getvar("quasigunmental") == 1 ? GUN_FIST : gun);
             playsound(S_WEAPLOAD, &d->o);
         }
         d->gunselect = gun;
@@ -705,6 +705,14 @@ namespace game
         top.z += d->aboveeye;
         return linecylinderintersect(from, to, bottom, top, d->radius, dist);
     }
+	VARP(quasidangerradius,100,100,1000);
+	bool qintersect(dynent *d, const vec &from, const vec &to, float &dist)   // if lineseg hits entity bounding box*quasidangerradius
+    {
+        vec bottom(d->o), top(d->o);
+        bottom.z -= d->eyeheight;
+        top.z += d->aboveeye;
+        return linecylinderintersect(from, to, bottom, top, d->radius*(quasidangerradius/100.0f), dist);
+    }
 
     dynent *intersectclosest(const vec &from, const vec &to, fpsent *at, float &bestdist)
     {
@@ -770,7 +778,13 @@ namespace game
         else if(d->gunselect!=GUN_FIST && d->gunselect!=GUN_BITE) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), d->gunselect==GUN_RIFLE ? 3.0f : 2.0f);
     }
 
-	VAR(quasigunkickback,0,1,1000);
+	VAR(quasigunkickbackenabled,0,0,1);
+	VARP(quasigunkickback,-1000,1,1000);
+	VARP(quasigunkickbackchainsaw,-30,0,30);
+	VAR(quasigunmental,0,0,1);
+
+	VAR(quasigunradiusenabled,0,0,1);
+	VARP(quasigunradius,0,0,10);
     void shoot(fpsent *d, const vec &targ)
     {
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
@@ -797,22 +811,24 @@ namespace game
         float dist = to.dist(from, unitv);
         unitv.div(dist);
         vec kickback(unitv);
-        kickback.mul(max(guns[d->gunselect].kickamount,(short) 1)*-2.5f*quasigunkickback);
+		//If gunkickbackenabled and the gun is a chainsaw use the updated chainsaw kickback.												if gunkickbackenabled apply the gunkickbackmodifier
+        kickback.mul( ((quasigunkickbackenabled == 1 && d->gunselect == GUN_FIST ? quasigunkickbackchainsaw : 0) + max(guns[d->gunselect].kickamount,(short) 1))*-2.5f*(quasigunkickbackenabled == 1 ? quasigunkickback : 1));
         d->vel.add(kickback);
-        float shorten = 0;
-        if(guns[d->gunselect].range && dist > guns[d->gunselect].range)
-            shorten = guns[d->gunselect].range;
-        float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
-        if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
-            shorten = barrier;
-        if(shorten)
-        {
-            to = unitv;
-            to.mul(shorten);
-            to.add(from);
-        }
 
-        if(d->gunselect==GUN_SG) createrays(from, to);
+		float shorten = 0;
+		if(guns[d->gunselect].range && dist > guns[d->gunselect].range)
+			shorten = guns[d->gunselect].range;
+		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
+		if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
+			shorten = barrier;
+		if(shorten)
+		{
+			to = unitv;
+			to.mul(shorten);
+			to.add(from);
+		}
+
+		if(d->gunselect==GUN_SG) createrays(from, to);
         else if(d->gunselect==GUN_CG) offsetray(from, to, 1, guns[GUN_CG].range, to);
 
         hits.setsize(0);
@@ -832,9 +848,11 @@ namespace game
 		d->gunwait = guns[d->gunselect].attackdelay;
 		if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += guns[d->gunselect].damage*(d->quadmillis ? 4 : 1)*(d->gunselect==GUN_SG ? SGRAYS : 1);
+		if(quasigunmental == 1) addmsg(N_GUNSELECT, "rci", d, GUN_FIST);
     }
 	//1 = Aimbot
 	//2 = Triggerbot
+	//3 = Misc Mode
 	VAR(quasiattackmode,0,0,2);
 
 	//If a target is not found within the time alloted, the gun will fire without a target.
@@ -855,10 +873,13 @@ namespace game
 	FVARP(quasiattackpitch,0,20,180);
 	VARP(quasiattackassisttime,1,55,1000);
 
+	VAR(quasiattacksmoothenabled,0,0,1);
+	VAR(quasiattacksmoothscale,1,50,1000);
+
 	fpsent *qaimbotenemy = NULL;
 	float qtargyaw,qtargpitch;
 	int qsteps = 0;
-	bool qsmooth = false;
+	bool qsmooth = false, qlt = false;
 
 	void quasiattackbot(fpsent *d, vec targ)
 	{
@@ -881,6 +902,8 @@ namespace game
 					{
 						lastdist = dist;
 						qaimbotenemy  = players[i];
+						qsmooth = false;
+						qsteps = 0;
 					}
 				}
 			}
@@ -889,10 +912,30 @@ namespace game
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL; //Not alive any more so unlock.
 				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, targ, (d->gunselect == GUN_FIST ? 2048 : guns[d->gunselect].range), quasiattackpitch, quasiattackyaw))
 				{
-					targ = qaimbotenemy->o; //Without this the aimbot misses ~50% of shots because shoot() is called before the new pitch and yaw are calculated into the worldpos.
-					ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
+					if(quasiattacksmoothenabled == 1 && !qsmooth)
+					{
+						float dist = d->o.dist(qaimbotenemy->o);
+						ai::getyawpitch(d->o,qaimbotenemy->o,qtargyaw,qtargpitch);
+						float pitch = fmod(fabs(asin((qaimbotenemy->o.z-d->o.z)/dist)/RAD-d->pitch), 360);
+						float yaw = atan2(qaimbotenemy->o.x-d->o.x, qaimbotenemy->o.y-d->o.y)/RAD-d->yaw;
+						float myaw = min(yaw, 360-yaw);
+						float mpitch = min(pitch, 360-pitch);
+						if(qsteps == 0) //Steps have not been calculated
+						{
+							qsteps = myaw/(quasiattacksmoothscale/100.0f);
+						}
+						conoutf(CON_GAMEINFO,"PYaw: %f PPitch: %f TYaw: %f TPitch: %f UYaw: %f UPitch: %f SYaw+=: %f SPitch+=: %f QSteps: %i",
+												d->yaw, d->pitch, yaw, pitch, myaw, mpitch, (myaw / (quasiattacksmoothscale/100.0f)) * qsteps, (mpitch / (quasiattacksmoothscale/100.0f)) * qsteps,qsteps);
+						//d->yaw += yaw / (quasiattacksmoothscale/100.0f) * qsteps; //If the target is moving go faster
+						//d->pitch += pitch / (quasiattacksmoothscale/100.0f) * qsteps;
+						qsteps--;
+						if(qsteps == 0) qsmooth = false; //target reached
+					} else {
+						targ = qaimbotenemy->o; //Without this the aimbot misses ~50% of shots because shoot() is called before the new pitch and yaw are calculated into the worldpos.
+						ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
 
-					if(quasiattackshoot == 1) d->attacking = true;
+						if(quasiattackshoot == 1) d->attacking = true;
+					}
 				}
 				else if(quasiattacklostunlock == 1) qaimbotenemy = NULL; //Cant see the target, so unlock
 			}
@@ -1060,7 +1103,7 @@ namespace game
     {
         updateprojectiles(curtime);
 		fpsent *qdanger = pointingatplayer();
-		if(qdanger != NULL) { dangercompass(10,qdanger->o); }
+		if(qdanger != NULL) { dangercompass(min(player1->o.dist(qdanger->o),100.0f),qdanger->o); }
 		if(player1->clientnum>=0 && (player1->state==CS_ALIVE || player1->state==CS_QLEAP)) {shoot(player1, worldpos); quasiattackbot(player1, worldpos); } // only sho ot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();

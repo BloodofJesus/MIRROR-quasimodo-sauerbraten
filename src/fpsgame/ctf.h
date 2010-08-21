@@ -453,7 +453,7 @@ struct ctfclientmode : clientmode
         glEnd();
     }
 
-    void drawblip(fpsent *d, float x, float y, float s, const vec &pos, bool flagblip)
+    void drawblip(fpsent *d, float x, float y, float s, const vec &pos, bool flagblip, bool cutoff = false)
     {
         float scale = calcradarscale();
         vec dir = d->o;
@@ -464,7 +464,7 @@ struct ctfclientmode : clientmode
               dist = dir.magnitude2(), maxdist = 1 - 0.05f - 0.05f;
         if(dist >= maxdist) dir.mul(maxdist/dist);
         dir.rotate_around_z(-camera1->yaw*RAD);
-        drawradar(x + s*0.5f*(1.0f + dir.x + xoffset), y + s*0.5f*(1.0f + dir.y + yoffset), size*s);
+        if(dist < maxdist || (dist >= maxdist && cutoff == false)) drawradar(x + s*0.5f*(1.0f + dir.x + xoffset), y + s*0.5f*(1.0f + dir.y + yoffset), size*s);
     }
 
     void drawblip(fpsent *d, float x, float y, float s, int i, bool flagblip)
@@ -541,20 +541,21 @@ struct ctfclientmode : clientmode
 		{
 			if(quasiradarhackspawn == 1)
 			{
+				int team = ctfteamflag(d->team);
 				const vector<extentity *> &qents = entities::getents();
 				loopv(qents)
 				{
-					if(qents[i]->type == ET_PLAYERSTART && (NFO_quasiwhichteam > 0 || qents[i]->attr2 == 0)) { //Make sure it's a player spawn, and the correct mode.
-						if(qents[i]->attr2 == NFO_quasiwhichteam && quasiradarhackteam == 0) continue;
-						if(qents[i]->attr2 == NFO_quasiwhichteam) settexture("quasimodo/sdot_blue.png", 1);
-						else settexture("quasimodo/sdot_red.png", 1);
-						drawblip(d, x, y, s, qents[i]->o, false);
+					if(qents[i]->type == ET_PLAYERSTART && qents[i]->attr2 != 0) {
+						settexture("quasimodo/sdot_red.png", 1);
+						if(qents[i]->attr2 == team && quasiradarhackteam == 1) settexture("quasimodo/sdot_blue.png", 1);
+						else if(qents[i]->attr2 == team && quasiradarhackteam == 0) continue;
+						drawblip(d, x, y, s, qents[i]->o, false,true);
 					}
 				}
 			}
 			loopv(players)
 			{
-				if((isteam(players[i]->team,player1->team) && quasiradarhackteam == 0) || (players[i]->state != CS_ALIVE && players[i]->state != CS_LAGGED && players[i]->state != CS_EDITING)) continue;
+				if(player1 == players[i] || (isteam(players[i]->team,player1->team) && quasiradarhackteam == 0) || (players[i]->state != CS_ALIVE && players[i]->state != CS_EDITING)) continue;
 				if(isteam(players[i]->team,player1->team)) settexture("quasimodo/dot_blue.png", 2);
 				else settexture("quasimodo/dot_red.png", 2);
 				drawblip(d, x, y, s, players[i]->o, false);

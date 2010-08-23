@@ -308,6 +308,8 @@ namespace game
 
     VARP(spawnwait, 0, 0, 1000);
 
+	VAR(quasirespawnenabled, 0, 0, 1);
+	VARR(qrespawn, 0 , 0, 1);
     void respawn()
     {
         if(player1->state==CS_DEAD)
@@ -316,10 +318,14 @@ namespace game
             int wait = cmode ? cmode->respawnwait(player1) : 0;
             if(wait>0)
             {
-                lastspawnattempt = lastmillis;
-                //conoutf(CON_GAMEINFO, "\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
-                return;
+				if(qrespawn == 0 || lastmillis - lastspawnattempt >= 500) {
+					if(quasirespawnenabled == 1) qrespawn = 1;
+					lastspawnattempt = lastmillis;
+					//conoutf(CON_GAMEINFO, "\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
+					return;
+				}
             }
+			qrespawn = 0;
             if(lastmillis < player1->lastpain + spawnwait) return;
             if(m_dmsp) { changemap(clientmap, gamemode); return; }    // if we die in SP we try the same map again
             respawnself();
@@ -344,6 +350,17 @@ namespace game
         if(intermission) return;
         if((player1->qattackbot = on)) respawn();
     }
+	void doquasikill(char * arg) {
+		int cn = parseplayer(arg);
+		if(cn == -1) return;
+		fpsent *t;
+		loopv(players) { if(players[i]->clientnum == cn) t = players[i]; }
+		conoutf(CON_GAMEINFO,"Shoot %s",t->name);
+		player1->attacking = true;
+		shoot(player1, t->o, t->feetpos());
+		player1->attacking = false;
+	}
+	ICOMMAND(quasikill, "s", (char * arg), { doquasikill(arg); });
 	VAR(quasileapenabled,0,0,1);
 	VAR(quasileapautorestore,0,0,1);
 	void doquasirestore(int q = 0)

@@ -657,6 +657,7 @@ namespace game
         player1->lifesequence = 0;
         player1->state = CS_ALIVE;
         player1->privilege = PRIV_NONE;
+		setvar("qspec",0);
         senditemstoserver = false;
         demoplayback = false;
         gamepaused = false;
@@ -900,7 +901,7 @@ namespace game
                 d->roll = roll;
                 d->move = (physstate>>4)&2 ? -1 : (physstate>>4)&1;
                 d->strafe = (physstate>>6)&2 ? -1 : (physstate>>6)&1;
-                vec oldpos(d->o);
+				vec oldpos(d->o);
                 if(allowmove(d))
                 {
                     d->o = o;
@@ -1072,8 +1073,8 @@ namespace game
                 if(!t) break;
                 if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, 0x6496FF, 4.0f, -8);
-				if(d->state==CS_SPECTATOR && quasichatcolorspec == 1) conoutf(CON_CHAT, "\f5%s:\f4 %s", d->name, text);
-				else conoutf(CON_CHAT, "%s:\f1 %s", colorname(d), text);
+				if(t->state==CS_SPECTATOR && quasichatcolorspec == 1) conoutf(CON_CHAT, "\f5%s:\f4 %s", t->name, text);
+				else conoutf(CON_CHAT, "%s:\f1 %s", colorname(t), text);
                 break;
             }
 
@@ -1239,14 +1240,13 @@ namespace game
 
             case N_SHOTFX:
             {
-				conoutf(CON_GAMEINFO,"shotfx");
                 int scn = getint(p), gun = getint(p), id = getint(p);
                 vec from, to;
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
                 fpsent *s = getclient(scn);
-				s->lastshot = from;
                 if(!s) break;
+				s->lastshot = from;
                 if(gun>GUN_FIST && gun<=GUN_PISTOL && s->ammo[gun]) s->ammo[gun]--;
                 s->gunselect = clamp(gun, (int)GUN_FIST, (int)GUN_PISTOL);
                 s->gunwait = guns[s->gunselect].attackdelay;
@@ -1268,7 +1268,6 @@ namespace game
             }
             case N_DAMAGE:
             {
-				conoutf(CON_GAMEINFO,"damage");
                 int tcn = getint(p),
                     acn = getint(p),
                     damage = getint(p),

@@ -853,6 +853,8 @@ namespace game
             d->lastupdate = lastmillis;
         }
     }
+	VARP(quasidetectteleport,0,0,1);
+	FVARP(quasidetectteleportdist,0,140,10000);
 
     void parsepositions(ucharbuf &p)
     {
@@ -903,6 +905,8 @@ namespace game
                 {
                     d->o = o;
                     d->o.z += d->eyeheight;
+					float dist = d->o.dist(oldpos);
+					if(quasidetectteleport == 1 && dist > quasidetectteleportdist && d->spawn == false && d->state != CS_SPAWNING) conoutf(CON_GAMEINFO,"\f3QUASI: %s just teleported a %f distance!",d->name,dist);
                     d->vel = vel;
                     d->falling = falling;
                     d->physstate = physstate&7;
@@ -926,6 +930,7 @@ namespace game
                 }
                 else d->smoothmillis = 0;
                 if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
+				d->spawn = false;
                 break;
             }
 
@@ -934,6 +939,7 @@ namespace game
                 int cn = getint(p), tp = getint(p), td = getint(p);
                 fpsent *d = getclient(cn);
                 if(!d || d->lifesequence < 0 || d->state==CS_DEAD) continue;
+				d->spawn = true;
                 entities::teleporteffects(d, tp, td, false);
                 break;
             }
@@ -982,6 +988,14 @@ namespace game
     }
 
     extern int deathscore;
+	VARP(quasidetectrespawn,0,0,1);
+	VARP(quasidetectaim,0,0,1);
+	FVARP(quasidetectyaw,0,42,360);
+	FVARP(quasidetectpitch,0,28,180);
+	FVARP(quasidetectdist,0,80,1000);
+
+	VARP(quasichatcolorspec,0,0,1);
+	VAR(quasirespawnaimbot,0,0,1);
 
     void parsemessages(int cn, fpsent *d, ucharbuf &p)
     {
@@ -1044,7 +1058,8 @@ namespace game
                 filtertext(text, text);
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                conoutf(CON_CHAT, "%s:\f0 %s", colorname(d), text);
+				if(d->state==CS_SPECTATOR && quasichatcolorspec == 1) conoutf(CON_CHAT, "\f5%s:\f4 %s", d->name, text);
+				else conoutf(CON_CHAT, "%s:\f0 %s", colorname(d), text);
                 break;
             }
 
@@ -1057,7 +1072,8 @@ namespace game
                 if(!t) break;
                 if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, 0x6496FF, 4.0f, -8);
-                conoutf(CON_TEAMCHAT, "%s:\f1 %s", colorname(t), text);
+				if(d->state==CS_SPECTATOR && quasichatcolorspec == 1) conoutf(CON_CHAT, "\f5%s:\f4 %s", d->name, text);
+				else conoutf(CON_CHAT, "%s:\f1 %s", colorname(d), text);
                 break;
             }
 
@@ -1190,11 +1206,26 @@ namespace game
                     if(editmode) toggleedit();
                     stopfollowing();
                 }
+				else
+				{
+					int wait = cmode ? cmode->respawnwait(s) : 0;
+					if(quasidetectrespawn == 1 && wait > 0) conoutf(CON_GAMEINFO,"\f3QUASI: %s just skipped the respawn timer by %d seconds!",s->name,wait);
+				}
                 s->respawn();
                 parsestate(s, p);
                 s->state = CS_ALIVE;
                 if(cmode) cmode->pickspawn(s);
                 else findplayerspawn(s);
+				if(s == player1 && quasirespawnaimbot == 1 ) {
+					loopv(players)
+					{
+						vec v; //Unsure as to the purpose of this. Does not have z vector.
+						if(raycubelos(s->o, players[i]->o, v))
+						{
+							ai::getyawpitch(s->o,players[i]->o,s->yaw,s->pitch);
+						}
+					}
+				}
                 if(s == player1)
                 {
                     showscores(false);
@@ -1208,11 +1239,13 @@ namespace game
 
             case N_SHOTFX:
             {
+				conoutf(CON_GAMEINFO,"shotfx");
                 int scn = getint(p), gun = getint(p), id = getint(p);
                 vec from, to;
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
                 fpsent *s = getclient(scn);
+				s->lastshot = from;
                 if(!s) break;
                 if(gun>GUN_FIST && gun<=GUN_PISTOL && s->ammo[gun]) s->ammo[gun]--;
                 s->gunselect = clamp(gun, (int)GUN_FIST, (int)GUN_PISTOL);
@@ -1235,6 +1268,7 @@ namespace game
             }
             case N_DAMAGE:
             {
+				conoutf(CON_GAMEINFO,"damage");
                 int tcn = getint(p),
                     acn = getint(p),
                     damage = getint(p),
@@ -1247,6 +1281,22 @@ namespace game
                 target->health = health;
                 if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
 				if(actor != player1 && actor->type == ENT_PLAYER) actor->totaldamage += damage;
+				vec targ;
+				if(quasidetectaim == 1 && actor != player1 && actor->lastshot.dist(actor->o) > quasidetectdist)
+				{
+					conoutf(CON_GAMEINFO,"\f3QUASI: %s just shot %s remotely!",actor->name,target->name);
+				}
+				else if(quasidetectaim == 1 && actor != player1 && actor->gunselect != GUN_RL && actor->gunselect != GUN_GL &&
+					!ai::getsight(actor->lastshot, actor->yaw, actor->pitch, target->o, targ, guns[actor->gunselect].range, quasidetectpitch, quasidetectyaw))
+				{
+					if(actor->lastshot.dist(target->o) > guns[actor->gunselect].range) {
+						conoutf(CON_GAMEINFO,"\f3QUASI: %s just shot %s beyond the range of the selected gun!",actor->name,target->name);
+					}
+					else
+					{
+						conoutf(CON_GAMEINFO,"\f3QUASI: %s just shot %s without a proper aim!",actor->name,target->name);
+					}
+				}
                 damaged(damage, target, actor, false);
                 break;
             }
@@ -1425,6 +1475,7 @@ namespace game
             }
 
             case N_PONG:
+				//if(quasilag == 1 && qlag < lastmillis) break;
                 addmsg(N_CLIENTPING, "i", player1->ping = (player1->ping*5+lastmillis-getint(p))/6);
                 break;
 

@@ -783,9 +783,7 @@ namespace game
 	VARP(quasigunkickbackchainsaw,-30,0,30);
 	VAR(quasigunmental,0,0,1);
 
-	VAR(quasigunradiusenabled,0,0,1);
-	VARP(quasigunradius,0,0,10);
-    void shoot(fpsent *d, const vec &targ)
+    void shoot(fpsent *d, const vec &targ, vec vfrom)
     {
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
         if(attacktime<d->gunwait) return;
@@ -806,6 +804,7 @@ namespace game
         }
         if(d->gunselect) d->ammo[d->gunselect]--;
         vec from = d->o;
+		if(vfrom != vec(0,0,0)) from = vfrom;
         vec to = targ;
         vec unitv;
         float dist = to.dist(from, unitv);
@@ -852,7 +851,6 @@ namespace game
     }
 	//1 = Aimbot
 	//2 = Triggerbot
-	//3 = Misc Mode
 	VAR(quasiattackmode,0,0,2);
 
 	//If a target is not found within the time alloted, the gun will fire without a target.
@@ -869,17 +867,13 @@ namespace game
 	//When the aimbot cannot see the target unlock.
 	VAR(quasiattacklostunlock,0,1,1);
 
+	VAR(quasiattacknoaim,0,0,1);
+
 	FVARP(quasiattackyaw,0,20,360);
 	FVARP(quasiattackpitch,0,20,180);
 	VARP(quasiattackassisttime,1,55,1000);
 
-	VAR(quasiattacksmoothenabled,0,0,1);
-	VAR(quasiattacksmoothscale,1,50,1000);
-
 	fpsent *qaimbotenemy = NULL;
-	float qtargyaw,qtargpitch;
-	int qsteps = 0;
-	bool qsmooth = false, qlt = false;
 
 	void quasiattackbot(fpsent *d, vec targ)
 	{
@@ -902,8 +896,6 @@ namespace game
 					{
 						lastdist = dist;
 						qaimbotenemy  = players[i];
-						qsmooth = false;
-						qsteps = 0;
 					}
 				}
 			}
@@ -912,30 +904,11 @@ namespace game
 				if(qaimbotenemy->state != CS_ALIVE) qaimbotenemy = NULL; //Not alive any more so unlock.
 				else if(ai::getsight(d->o, d->yaw, d->pitch, qaimbotenemy->o, targ, (d->gunselect == GUN_FIST ? 2048 : guns[d->gunselect].range), quasiattackpitch, quasiattackyaw))
 				{
-					if(quasiattacksmoothenabled == 1 && !qsmooth)
-					{
-						float dist = d->o.dist(qaimbotenemy->o);
-						ai::getyawpitch(d->o,qaimbotenemy->o,qtargyaw,qtargpitch);
-						float pitch = fmod(fabs(asin((qaimbotenemy->o.z-d->o.z)/dist)/RAD-d->pitch), 360);
-						float yaw = atan2(qaimbotenemy->o.x-d->o.x, qaimbotenemy->o.y-d->o.y)/RAD-d->yaw;
-						float myaw = min(yaw, 360-yaw);
-						float mpitch = min(pitch, 360-pitch);
-						if(qsteps == 0) //Steps have not been calculated
-						{
-							qsteps = myaw/(quasiattacksmoothscale/100.0f);
-						}
-						conoutf(CON_GAMEINFO,"PYaw: %f PPitch: %f TYaw: %f TPitch: %f UYaw: %f UPitch: %f SYaw+=: %f SPitch+=: %f QSteps: %i",
-												d->yaw, d->pitch, yaw, pitch, myaw, mpitch, (myaw / (quasiattacksmoothscale/100.0f)) * qsteps, (mpitch / (quasiattacksmoothscale/100.0f)) * qsteps,qsteps);
-						//d->yaw += yaw / (quasiattacksmoothscale/100.0f) * qsteps; //If the target is moving go faster
-						//d->pitch += pitch / (quasiattacksmoothscale/100.0f) * qsteps;
-						qsteps--;
-						if(qsteps == 0) qsmooth = false; //target reached
-					} else {
-						targ = qaimbotenemy->o; //Without this the aimbot misses ~50% of shots because shoot() is called before the new pitch and yaw are calculated into the worldpos.
-						ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
+					targ = qaimbotenemy->o; //Without this the aimbot misses ~50% of shots because shoot() is called before the new pitch and yaw are calculated into the worldpos.
+					//Actually change yaw + pitch?
+					if(quasiattacknoaim == 0) ai::getyawpitch(d->o, qaimbotenemy->o, d->yaw, d->pitch);
 
-						if(quasiattackshoot == 1) d->attacking = true;
-					}
+					if(quasiattackshoot == 1) d->attacking = true;
 				}
 				else if(quasiattacklostunlock == 1) qaimbotenemy = NULL; //Cant see the target, so unlock
 			}

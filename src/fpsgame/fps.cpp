@@ -429,7 +429,21 @@ namespace game
 	}
 	ICOMMAND(quasiset,"",(), { quasitelesetdest(); });
 	ICOMMAND(quasigoto,"",(), { quasitelegotodest(); });
-
+	VAR(qrageon,0,0,1);
+	VAR(qrage,0,0,1000);
+	void doquasirage() {
+		qrageon = 1;
+		qrage = 0;
+	}
+	ICOMMAND(quasirage,"",(), { doquasirage(); });
+	void quasiping(char *text) { 
+		//char prefix[1];
+		//prefix[0] = char(27);
+		//char * newstr = strcat(prefix,text);
+		conoutf(CON_CHAT, "\f4QuasiPing: %s", text);
+		addmsg(N_SAYTEAM, "rcs", player1, text); 
+	}
+    COMMAND(quasiping, "C");
     bool canjump()
     {
         if(!intermission) respawn();

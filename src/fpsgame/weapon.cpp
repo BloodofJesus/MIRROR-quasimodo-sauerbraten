@@ -782,6 +782,7 @@ namespace game
 	VARP(quasigunkickback,-1000,1,1000);
 	VARP(quasigunkickbackchainsaw,-30,0,30);
 	VAR(quasigunmental,0,0,1);
+	VAR(quasireload,0,1,500);
 
     void shoot(fpsent *d, const vec &targ, vec vfrom)
     {
@@ -844,7 +845,7 @@ namespace game
                    hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
         }
 
-		d->gunwait = guns[d->gunselect].attackdelay;
+		d->gunwait = guns[d->gunselect].attackdelay/quasireload;
 		if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += guns[d->gunselect].damage*(d->quadmillis ? 4 : 1)*(d->gunselect==GUN_SG ? SGRAYS : 1);
 		if(quasigunmental == 1) addmsg(N_GUNSELECT, "rci", d, GUN_FIST);
@@ -1072,13 +1073,30 @@ namespace game
         removebouncers(d);
         removeprojectiles(d);
     }
+	int iter = 0;
+	int lastrage = 0;
     void updateweapons(int curtime)
     {
         updateprojectiles(curtime);
 		fpsent *qdanger = pointingatplayer();
 		if(qdanger != NULL) { dangercompass(min(player1->o.dist(qdanger->o),100.0f),qdanger->o); }
 		if(player1->clientnum>=0 && (player1->state==CS_ALIVE || player1->state==CS_QLEAP)) {shoot(player1, worldpos); quasiattackbot(player1, worldpos); } // only sho ot when connected to server
-        updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
+        
+		if(getvar("qrageon") == 1 && lastmillis-lastrage>150) {
+			iter = players.length();
+			int qr = getvar("qrage");
+			if(qr < iter) {
+				fpsent * t = players[qr];
+				conoutf(CON_GAMEINFO,"\f3Raging at %s!",t->name);
+				player1->attacking = true;
+				if(!isteam(t->team,player1->team) && t->state == CS_ALIVE) shoot(player1, t->o, t->feetpos());
+				player1->attacking = false;
+				setvar("qrage",qr+1);
+				lastrage = lastmillis;
+			} else setvar("qrage",0);
+		}
+		
+		updatebouncers(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
         fpsent *following = followingplayer();
         if(!following) following = player1;
         loopv(players)

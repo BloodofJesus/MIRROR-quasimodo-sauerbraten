@@ -557,7 +557,8 @@ namespace game
     }
     COMMAND(pausegame, "i");
 
-    bool ispaused() { return gamepaused; }
+	VAR(quasiantipause,0,0,1);
+    bool ispaused() { if(quasiantipause == 0) return gamepaused; else return false; }
 
     // collect c2s messages conveniently
     vector<uchar> messages;
@@ -857,6 +858,9 @@ namespace game
 	VARP(quasidetectteleport,0,0,1);
 	FVARP(quasidetectteleportdist,0,140,10000);
 
+	VARP(quasidetectspeedhack,0,0,1);
+	FVARP(quasidetectspeedhackspeed,0,166.2851,10000);
+
     void parsepositions(ucharbuf &p)
     {
         int type;
@@ -909,7 +913,7 @@ namespace game
 					float dist = d->o.dist(oldpos);
 					if(quasidetectteleport == 1 && dist > quasidetectteleportdist && d->spawn == false && d->state != CS_SPAWNING) conoutf(CON_GAMEINFO,"\f3QUASI: %s just teleported a %f distance!",d->name,dist);
                     d->vel = vel;
-                    d->falling = falling;
+					d->falling = falling;
                     d->physstate = physstate&7;
                     updatephysstate(d);
                     updatepos(d);
@@ -1061,6 +1065,8 @@ namespace game
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
 				if(d->state==CS_SPECTATOR && quasichatcolorspec == 1) conoutf(CON_CHAT, "\f5%s:\f4 %s", d->name, text);
 				else conoutf(CON_CHAT, "%s:\f0 %s", colorname(d), text);
+				if(text[0] == '\7') conoutf(CON_CHAT, "\f3You have been quasipinged by %s with %s",d->name,text);
+				//conoutf(CON_CHAT, "\f3q %i",(int)text[0]);
                 break;
             }
 
@@ -1787,19 +1793,19 @@ namespace game
     }
     COMMAND(listdemos, "");
 
-    void sendmap()
+    void sendmap(bool light)
     {
         if(!m_edit || (player1->state==CS_SPECTATOR && remote && !player1->privilege)) { conoutf(CON_ERROR, "\"sendmap\" only works in coop edit mode"); return; }
         conoutf("sending map...");
         defformatstring(mname)("sendmap_%d", lastmillis);
-        save_world(mname, true);
+        save_world(mname, light);
         defformatstring(fname)("packages/base/%s.ogz", mname);
         stream *map = openrawfile(path(fname), "rb");
         if(map)
         {
             int len = map->size();
-            if(len > 1024*1024) conoutf(CON_ERROR, "map is too large");
-            else if(len <= 0) conoutf(CON_ERROR, "could not read map");
+            //if(len > 1024*1024) conoutf(CON_ERROR, "map is too large");
+            if(len <= 0) conoutf(CON_ERROR, "could not read map");
             else
             {
                 sendfile(-1, 2, map);
@@ -1810,7 +1816,8 @@ namespace game
         else conoutf(CON_ERROR, "could not read map");
         remove(findfile(fname, "rb"));
     }
-    COMMAND(sendmap, "");
+	ICOMMAND(sendmap,"",(),{sendmap(true);});
+	ICOMMAND(sendmapfull,"",(),{sendmap(false);});
 
     void gotoplayer(const char *arg)
     {

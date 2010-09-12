@@ -518,6 +518,7 @@ void resetgamma()
 }
 
 VAR(dbgmodes, 0, 0, 1);
+VARP(quasifullscreen,0,0,1);
 
 int desktopw = 0, desktoph = 0;
 
@@ -528,7 +529,7 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
     flags = 0;
     #endif
     if(fullscreen) flags = SDL_FULLSCREEN;
-	else {
+	else if(quasifullscreen == 1) {
 		flags = SDL_NOFRAME;
 		putenv("SDL_VIDEO_CENTERED=1"); 
 	}

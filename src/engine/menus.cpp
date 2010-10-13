@@ -506,11 +506,25 @@ void guiservers()
         }
     }
 }
+void guiserverextinfo()
+{
+    extern char *showserverinfo(g3d_gui *cgui);
+    if(cgui) 
+    {
+        char *command = showserverinfo(cgui);
+        if(command)
+        {
+            updatelater.add().schedule(command);
+            if(shouldclearmenu) clearlater = true;
+        }
+    }
+}
 
 COMMAND(newgui, "sss");
 COMMAND(guibutton, "sss");
 COMMAND(guitext, "ss");
 COMMAND(guiservers, "s");
+COMMAND(guiserverextinfo, "s");
 ICOMMAND(cleargui, "i", (int *n), intret(cleargui(*n)));
 COMMAND(showgui, "s");
 COMMAND(guionclear, "s");

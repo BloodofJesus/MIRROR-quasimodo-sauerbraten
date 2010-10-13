@@ -769,6 +769,9 @@ namespace game
         }
     }
 
+
+    VAR(quasimodping,INT_MIN,0,INT_MAX);
+
     void sendmessages()
     {
         packetbuf p(MAXTRANS);
@@ -799,7 +802,7 @@ namespace game
         if(lastmillis-lastping>250)
         {
             putint(p, N_PING);
-            putint(p, lastmillis);
+            putint(p, lastmillis + quasimodping);
             lastping = lastmillis;
         }
         sendclientpacket(p.finalize(), 1);

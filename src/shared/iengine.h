@@ -326,7 +326,52 @@ extern void cleanragdoll(dynent *d);
 extern int maxclients;
 
 enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_OVERFLOW, DISC_NUM };
+struct serverinfo
+{
+    string name, map, sdesc;
+    int port, numplayers, ping, resolved, lastping;
+    vector<int> attr;
+    ENetAddress address;
+    bool keep;
+    const char *password;
+    void * extinfo;
 
+    serverinfo()
+     : port(-1), numplayers(0), ping(INT_MAX), resolved(0), lastping(-1), keep(false), password(NULL), extinfo(NULL)
+    {
+        name[0] = map[0] = sdesc[0] = '\0';
+    }
+
+    ~serverinfo()
+    {
+        DELETEA(password);
+        delete extinfo;
+    }
+
+    void reset()
+    {
+        lastping = -1;
+    }
+
+    void checkdecay(int decay)
+    {
+        if(lastping >= 0 && totalmillis - lastping >= decay)
+        {
+            ping = INT_MAX;
+            numplayers = 0;
+            lastping = -1;
+        }
+        if(lastping < 0) lastping = totalmillis;
+    }
+
+    void addping(int rtt, int millis)
+    {
+        if(millis >= lastping) lastping = -1;
+        if(ping == INT_MAX) ping = rtt;
+        else ping = (ping*4 + rtt)/5;
+    }
+};
+extern void xaoc_serverbot_init();
 extern void *getclientinfo(int i);
 extern ENetPeer *getclientpeer(int i);
 extern void sendf(int cn, int chan, const char *format, ...);

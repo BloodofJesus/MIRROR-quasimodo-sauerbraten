@@ -260,69 +260,25 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, const ENetAddress 
  
 enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
 
-struct serverinfo
+static int compareservers(serverinfo **ap, serverinfo **bp)
 {
-    string name, map, sdesc;
-    int port, numplayers, ping, resolved, lastping;
-    vector<int> attr;
-    ENetAddress address;
-    bool keep;
-    const char *password;
-
-    serverinfo()
-     : port(-1), numplayers(0), ping(INT_MAX), resolved(UNRESOLVED), lastping(-1), keep(false), password(NULL)
-    {
-        name[0] = map[0] = sdesc[0] = '\0';
-    }
-
-    ~serverinfo()
-    {
-        DELETEA(password);
-    }
-
-    void reset()
-    {
-        lastping = -1;
-    }
-
-    void checkdecay(int decay)
-    {
-        if(lastping >= 0 && totalmillis - lastping >= decay)
-        {
-            ping = INT_MAX;
-            numplayers = 0;
-            lastping = -1;
-        }
-        if(lastping < 0) lastping = totalmillis;
-    }
-
-    void addping(int rtt, int millis)
-    {
-        if(millis >= lastping) lastping = -1;
-        if(ping == INT_MAX) ping = rtt;
-        else ping = (ping*4 + rtt)/5;
-    }
-
-    static int compare(serverinfo **ap, serverinfo **bp)
-    {
-        serverinfo *a = *ap, *b = *bp;
-        bool ac = server::servercompatible(a->name, a->sdesc, a->map, a->ping, a->attr, a->numplayers),
-             bc = server::servercompatible(b->name, b->sdesc, b->map, b->ping, b->attr, b->numplayers);
-        if(ac > bc) return -1;
-        if(bc > ac) return 1;
-        if(a->keep > b->keep) return -1;
-        if(a->keep < b->keep) return 1;
-        if(a->numplayers < b->numplayers) return 1;
-        if(a->numplayers > b->numplayers) return -1;
-        if(a->ping > b->ping) return 1;
-        if(a->ping < b->ping) return -1;
-        int cmp = strcmp(a->name, b->name);
-        if(cmp != 0) return cmp;
-        if(a->port < b->port) return -1;
-        if(a->port > b->port) return 1;
-        return 0;
-    }
-};
+    serverinfo *a = *ap, *b = *bp;
+    bool ac = server::servercompatible(a->name, a->sdesc, a->map, a->ping, a->attr, a->numplayers),
+         bc = server::servercompatible(b->name, b->sdesc, b->map, b->ping, b->attr, b->numplayers);
+    if(ac > bc) return -1;
+    if(bc > ac) return 1;
+    if(a->keep > b->keep) return -1;
+    if(a->keep < b->keep) return 1;
+    if(a->numplayers < b->numplayers) return 1;
+    if(a->numplayers > b->numplayers) return -1;
+    if(a->ping > b->ping) return 1;
+    if(a->ping < b->ping) return -1;
+    int cmp = strcmp(a->name, b->name);
+    if(cmp != 0) return cmp;
+    if(a->port < b->port) return -1;
+    if(a->port > b->port) return 1;
+    return 0;
+}
 
 vector<serverinfo *> servers;
 ENetSocket pingsock = ENET_SOCKET_NULL;
@@ -403,6 +359,7 @@ void pingservers()
         buf.data = ping;
         buf.dataLength = p.length();
         enet_socket_send(pingsock, &si.address, &buf, 1);
+        game::extinforequest(pingsock, si.address, &si);
         
         si.checkdecay(servpingdecay);
     }
@@ -414,6 +371,7 @@ void pingservers()
         buf.data = ping;
         buf.dataLength = p.length();
         enet_socket_send(pingsock, &address, &buf, 1);
+        game::extinforequest(pingsock, address, NULL);
     }
     lastinfo = totalmillis;
 }
@@ -470,6 +428,8 @@ void checkpings()
         if(!si && searchlan) si = newserver(NULL, server::serverport(addr.port), addr.host); 
         if(!si) continue;
         ucharbuf p(ping, len);
+        if(game::extinfoparse(p,si)) continue;
+        p.len = 0;
         int millis = getint(p), rtt = clamp(totalmillis - millis, 0, min(servpingdecay, totalmillis));
         if(rtt < servpingdecay) si->addping(rtt, millis);
         si->numplayers = getint(p);
@@ -493,8 +453,10 @@ void refreshservers()
     checkresolver();
     checkpings();
     if(totalmillis - lastinfo >= servpingrate/(maxservpings ? max(1, (servers.length() + maxservpings - 1) / maxservpings) : 1)) pingservers();
-    servers.sort(serverinfo::compare);
+    servers.sort(compareservers);
 }
+
+serverinfo * selectedserver = NULL;
 
 char *showservers(g3d_gui *cgui)
 {
@@ -515,19 +477,36 @@ char *showservers(g3d_gui *cgui)
                 const char *sdesc = si.sdesc;
                 if(si.address.host == ENET_HOST_ANY) sdesc = "[unknown host]";
                 else if(si.ping == INT_MAX) sdesc = "[waiting for response]";
-                if(game::serverinfoentry(cgui, i, si.name, si.port, sdesc, si.map, sdesc == si.sdesc ? si.ping : -1, si.attr, si.numplayers))
-                    sc = &si;
+                if(game::serverfilter(&si) && game::serverinfoentry(cgui, i, si.name, si.port, sdesc, si.map, sdesc == si.sdesc ? si.ping : -1, si.attr, si.numplayers))
+                    selectedserver = sc = &si;
             }
             game::serverinfoendcolumn(cgui, i);
         }
         cgui->poplist();
         start = end;
     }
+
     if(!sc) return NULL;
-    string command;
-    if(sc->password) formatstring(command)("connect %s %d \"%s\"", sc->name, sc->port, sc->password);
-    else formatstring(command)("connect %s %d", sc->name, sc->port);
-    return newstring(command);
+    return "showgui serverextinfo";
+}
+
+char *showserverinfo(g3d_gui * cgui)
+{
+    refreshservers();
+    game::serverextinfo(cgui,selectedserver);
+    cgui->separator();
+    cgui->pushlist(0);
+    if(cgui->button("Cancel",0xFFFFDD,"exit")&G3D_UP) {
+        return "showgui servers";
+    }
+    if(cgui->button("Connect",0xFFFFDD,"checkbox_on")&G3D_UP) {
+        string command;
+        if(selectedserver->password) formatstring(command)("connect %s %d \"%s\"", selectedserver->name, selectedserver->port, selectedserver->password);
+        else formatstring(command)("connect %s %d", selectedserver->name, selectedserver->port);
+        return newstring(command);
+    }
+    cgui->poplist();
+    return NULL;
 }
 
 void clearservers(bool full = false)
@@ -641,4 +620,3 @@ void writeservercfg()
     }
     delete f;
 }
-

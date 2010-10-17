@@ -1699,32 +1699,44 @@ namespace game
         } //end scoreboard
     }
 
+    bool matchstr(char * haystack, const char * straw) {
+        char * copy_haystack = new char[strlen(haystack)];
+        char * copy_straw = new char[strlen(straw)];
+        char * r = NULL;
+        for(int it = 0; it < strlen(haystack); it++) {
+            copy_haystack[it] = tolower(haystack[it]);
+        }
+        for(int it = 0; it < strlen(straw); it++) {
+            copy_straw[it] = tolower(straw[it]);
+        }
+        r = strstr(copy_haystack,copy_straw);
+        return r && r != NULL;
 
+    }
     SVAR(filter,"");
     VAR(filtermode,0,0,3);
+	VAR(filtercase,0,1,1);
     bool serverfilter(serverinfo * si) {
         extinfo * x = (extinfo *)si->extinfo;
         if(!filter[0]) return true;
         if(x == NULL) return false;
         if(filtermode == 0) {
             loopv(x->players) {
-             if(strstr(x->players[i]->name,filter)) return true;
+                if(!filtercase) {
+                    if(matchstr(x->players[i]->name,filter)) return true;
+                }
+                else {
+                    if(strstr(x->players[i]->name,filter)) return true;
+                }
             }
         }
         else if(filtermode == 1) {
-            ENetAddress pl;
-            string host = "";
-            loopv(x->players) {
-                pl.host = x->players[i]->ip;
-                enet_address_get_host_ip(&pl,host,sizeof(host));
-                if(strstr(host,filter)) return true;
+            if(!filtercase) {
+                if(matchstr(si->sdesc,filter)) return true;
             }
-        }
-        else if(filtermode == 2) {
-            if(strstr(si->sdesc,filter)) return true;
-        }
-        else if(filtermode == 3) {
-            if(strstr(si->name,filter)) return true;
+            else {
+                if(strstr(si->sdesc,filter)) return true;
+            }
         }
         return false;
     }

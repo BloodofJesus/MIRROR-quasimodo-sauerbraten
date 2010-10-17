@@ -705,6 +705,13 @@ namespace game
         top.z += d->aboveeye;
         return linecylinderintersect(from, to, bottom, top, d->radius, dist);
     }
+    bool qintersectadd(dynent *d, const vec &from, const vec &to, float &addradius, float &addheight,float &dist)   // if lineseg hits entity bounding box+add
+    {
+        vec bottom(d->o), top(d->o);
+        bottom.z -= d->eyeheight + addheight;
+        top.z += d->aboveeye + addheight;
+        return linecylinderintersect(from, to, bottom, top, d->radius + addradius, dist);
+    }
 	VARP(quasidangerradius,100,100,1000);
 	bool qintersect(dynent *d, const vec &from, const vec &to, float &dist)   // if lineseg hits entity bounding box*quasidangerradius
     {
@@ -869,9 +876,12 @@ namespace game
 	VAR(quasiattacklostunlock,0,1,1);
 
 	VAR(quasiattacknoaim,0,0,1);
+    VAR(quasiattackcylinderlock,0,0,1);
 
 	FVARP(quasiattackyaw,0,20,360);
 	FVARP(quasiattackpitch,0,20,180);
+	FVARP(quasiattackcylinderradius,0,50,10000);
+    FVARP(quasiattackcylinderheight,0,10,10000);
 	VARP(quasiattackassisttime,1,55,1000);
 
 	fpsent *qaimbotenemy = NULL;
@@ -891,7 +901,8 @@ namespace game
 			if(qaimbotenemy == NULL) //Look for a new target only if we dont have one.
 			{
 				loopv(players) {
-					dist = players[i]->o.dist(d->o);
+                    dist = players[i]->o.dist(d->o);
+                    if(quasiattackcylinderlock == 1 && !qintersectadd(players[i], d->o, targ, quasiattackcylinderradius, quasiattackcylinderheight)) continue;
 					if(players[i] == d || players[i]->state != CS_ALIVE || (quasiattackteam == 0 && isteam(players[i]->team,d->team))) continue;
 					if(dist < lastdist && ai::getsight(d->o, d->yaw, d->pitch, players[i]->o, targ, (d->gunselect == GUN_FIST ? 2048 : guns[d->gunselect].range), quasiattackpitch, quasiattackyaw))
 					{

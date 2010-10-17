@@ -742,6 +742,7 @@ namespace game
     extern void gibeffect(int damage, const vec &vel, fpsent *d);
     extern float intersectdist;
     extern bool intersect(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
+    extern bool qintersectadd(dynent *d, const vec &from, const vec &to, float &addradius, float &addheight,float &dist = intersectdist);
 	extern bool qintersect(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
     extern dynent *intersectclosest(const vec &from, const vec &to, fpsent *at, float &dist = intersectdist);
     extern void clearbouncers();

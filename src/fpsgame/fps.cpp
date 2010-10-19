@@ -252,7 +252,7 @@ namespace game
             player1->health++;
         }
     }
-
+    VAR(quasiantiintermission,0,0,1);
     void updateworld()        // main game update loop
     {
         if(!maptime) { maptime = lastmillis; maprealtime = totalmillis; return; }
@@ -277,7 +277,7 @@ namespace game
                 moveplayer(player1, 10, false);
             }
         }
-        else if(!intermission)
+        else if(!intermission || quasiantiintermission)
         {
             if(player1->ragdoll) cleanragdoll(player1);
             moveplayer(player1, 10, true);
@@ -341,13 +341,13 @@ namespace game
 
     void doattack(bool on)
     {
-        if(intermission) return;
+        if(intermission && !quasiantiintermission) return;
         if((player1->attacking = on)) respawn();
     }
 
 	void doquasiattack(bool on)
     {
-        if(intermission) return;
+        if(intermission  && !quasiantiintermission) return;
         if((player1->qattackbot = on)) respawn();
     }
 	void doquasikill(char * arg) {
@@ -435,7 +435,7 @@ namespace game
 		qrageon = 1;
 		qrage = 0;
 	}
-	ICOMMAND(quasirage,"",(), { doquasirage(); });
+	//ICOMMAND(quasirage,"",(), { doquasirage(); });
 	void quasiping(char *text) { 
 		//char prefix[1];
 		//prefix[0] = char(27);
@@ -444,10 +444,19 @@ namespace game
 		addmsg(N_SAYTEAM, "rcs", player1, text); 
 	}
     COMMAND(quasiping, "C");
+
+    void quasictfcap(int * ct) {
+        if(!cmode) {
+            conoutf("\f3Unable to capture flag!");
+            return;
+        }
+        for(int it=0; it < *ct; it++) cmode->quasicapflag(player1);
+    }
+    COMMAND(quasictfcap,"i");
     bool canjump()
     {
-        if(!intermission) respawn();
-        return player1->state!=CS_DEAD && !intermission;
+        if(!intermission || quasiantiintermission) respawn();
+        return player1->state!=CS_DEAD && (!intermission || quasiantiintermission);
     }
 
     bool allowmove(physent *d)
@@ -460,7 +469,7 @@ namespace game
 
     void damaged(int damage, fpsent *d, fpsent *actor, bool local)
     {
-        if(d->state!=CS_ALIVE || intermission) return;
+        if(d->state!=CS_ALIVE || (intermission && !quasiantiintermission)) return;
 
         if(local) damage = d->dodamage(damage);
         else if(actor==player1) return;
@@ -523,7 +532,7 @@ namespace game
             else d->resetinterp();
             return;
         }
-		else if((d->state!=CS_ALIVE && d->state != CS_QLEAP && getvar("qspec") != 1)|| intermission) return;
+		else if((d->state!=CS_ALIVE && d->state != CS_QLEAP && getvar("qspec") != 1)|| (intermission && !quasiantiintermission)) return;
 		if(d == player1 && getvar("qspec") == 1) d = &qplayer; //make the changes to our save. Dont drop out of spectator though.
         fpsent *h = followingplayer();
         if(!h) h = player1;
@@ -1706,6 +1715,7 @@ namespace game
         for(int it = 0; it < strlen(haystack); it++) {
             copy_haystack[it] = tolower(haystack[it]);
         }
+
         for(int it = 0; it < strlen(straw); it++) {
             copy_straw[it] = tolower(straw[it]);
         }
@@ -1714,31 +1724,33 @@ namespace game
 
     }
     SVAR(filter,"");
-    VAR(filtermode,0,0,3);
+    VAR(filterplayernames,0,1,1);
+    VAR(filterservernames,0,1,1);
 	VAR(filtercase,0,1,1);
-    bool serverfilter(serverinfo * si) {
+    int serverfilter(serverinfo * si) {
         extinfo * x = (extinfo *)si->extinfo;
         if(!filter[0]) return true;
         if(x == NULL) return false;
-        if(filtermode == 0) {
+        int is = 0;
+        if(filterplayernames == 1) {
             loopv(x->players) {
                 if(!filtercase) {
-                    if(matchstr(x->players[i]->name,filter)) return true;
+                    if(matchstr(x->players[i]->name,filter)) is++;
                 }
                 else {
-                    if(strstr(x->players[i]->name,filter)) return true;
+                    if(strstr(x->players[i]->name,filter)) is++;
                 }
             }
         }
-        else if(filtermode == 1) {
+        if(filterservernames == 1) {
             if(!filtercase) {
-                if(matchstr(si->sdesc,filter)) return true;
+                if(matchstr(si->sdesc,filter)) is++;
             }
             else {
-                if(strstr(si->sdesc,filter)) return true;
+                if(strstr(si->sdesc,filter)) is++;
             }
         }
-        return false;
+        return is;
     }
 
 

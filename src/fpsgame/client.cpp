@@ -60,6 +60,7 @@ namespace game
         player1->playermodel = playermodel;
         addmsg(N_SWITCHMODEL, "ri", player1->playermodel);
     }
+    ICOMMAND(quasimodel,"i",(int * i),{ switchplayermodel(*i); });
 
     struct authkey
     {
@@ -96,6 +97,16 @@ namespace game
         if(name[0] && key[0]) authkeys.add(new authkey(name, key, desc));
     }
     ICOMMAND(authkey, "sss", (char *name, char *key, char *desc), addauthkey(name, key, desc));
+
+    ICOMMAND(ass,"ii",(int * cn, int * snd),{
+        fpsent * d = NULL;
+        loopv(players) if(players[i]->clientnum == *cn) d = players[i];
+        if(d == NULL) {
+            conoutf("Player not found.");
+            return;
+        }
+        addmsg(N_SOUND, "ci", d, snd);
+    });
 
     bool hasauthkey(const char *name, const char *desc)
     {
@@ -310,6 +321,13 @@ namespace game
         addmsg(N_SETMASTER, "ris", val, hash);
     }
     COMMAND(setmaster, "s");
+
+    SVAR(quasievilpre,"");
+    VAR(quasievilct,0,0,20);
+    VAR(quasievilenabled,0,0,1);
+    ICOMMAND(evil,"",(),{
+        quasievilenabled = quasievilenabled == 1 ? 0 : 1;
+    });
     ICOMMAND(mastermode, "i", (int *val), addmsg(N_MASTERMODE, "ri", *val));
 
     bool tryauth(const char *desc)
@@ -807,13 +825,15 @@ namespace game
         }
         sendclientpacket(p.finalize(), 1);
     }
-
+    VAR(quasimodpj,0,0,10);
     void c2sinfo(bool force) // send update to the server
     {
         static int lastupdate = -1000;
         if(totalmillis - lastupdate < 33 && !force) return; // don't update faster than 30fps
         lastupdate = totalmillis;
-        sendpositions();
+        for(int it = 0; it < quasimodpj+1; it++) {
+            sendpositions();
+        }
         sendmessages();
         flushclient();
     }
@@ -1729,7 +1749,6 @@ namespace game
             }
         }
     }
-
     void parsepacketclient(int chan, packetbuf &p)   // processes any updates from the server
     {
         switch(chan)

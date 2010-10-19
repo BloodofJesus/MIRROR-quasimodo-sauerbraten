@@ -297,6 +297,10 @@ struct captureclientmode : clientmode
         d->lastrepammo = -1;
     }
 
+    void quasicapflag(fpsent * d) {
+        
+    }
+
     void rendertether(fpsent *d)
     {
         int oldbase = d->lastbase;

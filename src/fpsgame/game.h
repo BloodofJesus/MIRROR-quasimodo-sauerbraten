@@ -610,6 +610,7 @@ namespace entities
     extern void resettriggers();
     extern void checktriggers();
     extern void checkitems(fpsent *d);
+    extern void quasicapflag(fpsent *d);
     extern void checkquad(int time, fpsent *d);
     extern void resetspawns();
     extern void spawnitems(bool force = false);
@@ -636,6 +637,7 @@ namespace game
         virtual void respawned(fpsent *d) {}
         virtual void setup() {}
         virtual void checkitems(fpsent *d) {}
+        virtual void quasicapflag(fpsent *d) {}
         virtual int respawnwait(fpsent *d) { return 0; }
         virtual void pickspawn(fpsent *d) { findplayerspawn(d); }
         virtual void senditems(packetbuf &p) {}

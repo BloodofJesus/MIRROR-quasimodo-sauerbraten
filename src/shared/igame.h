@@ -88,7 +88,7 @@ namespace game
     extern void serverinfoendcolumn(g3d_gui *g, int i);
     extern bool serverinfoentry(g3d_gui *g, int i, const char *name, int port, const char *desc, const char *map, int ping, const vector<int> &attr, int np);
     extern void serverextinfo(g3d_gui *cgui, serverinfo * si);
-    extern bool serverfilter(serverinfo * si);
+    extern int serverfilter(serverinfo * si);
     extern void extinforequest(ENetSocket &pingsock, ENetAddress & address,serverinfo * si);
     extern bool extinfoparse(ucharbuf & p, serverinfo * si);
     extern bool needminimap();

@@ -920,16 +920,15 @@ struct ctfclientmode : clientmode
     }
     
     void quasicapflag(fpsent * d) {
-        /*
-        flag * etf, * atf;
         int team = ctfteamflag(d->team);
-        int antiteam = (team == 0 ? 1 : 0);
-        loopv(flags) if(flags[i].team == team) etf = &flags[i];
-        loopv(flags) if(flags[i].team == antiteam) atf = &flags[i];
-        addmsg(N_TAKEFLAG, "rcii", d, team, etf->version);
-        addmsg(N_TAKEFLAG, "rcii", d, antiteam, atf->version);
-        */
-        loopv(flags) addmsg(N_TAKEFLAG, "rcii", d, i, flags[i].version);
+        loopv(flags) {
+            if(flags[i].team == team) {
+                team = i;
+                break;
+            }
+        }
+        addmsg(N_TAKEFLAG, "rcii", d, (team == 1 ? 0 : 1), flags[team == 1 ? 0 : 1].version);
+        addmsg(N_TAKEFLAG, "rcii", d, team, flags[team].version);
     }
 
     void respawned(fpsent *d)

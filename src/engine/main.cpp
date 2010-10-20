@@ -518,7 +518,6 @@ void resetgamma()
 }
 
 VAR(dbgmodes, 0, 0, 1);
-VARP(quasifullscreen,0,0,1);
 
 int desktopw = 0, desktoph = 0;
 
@@ -529,10 +528,6 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
     flags = 0;
     #endif
     if(fullscreen) flags = SDL_FULLSCREEN;
-	else if(quasifullscreen == 1) {
-		flags = SDL_NOFRAME;
-		putenv("SDL_VIDEO_CENTERED=1"); 
-	}
     SDL_Rect **modes = SDL_ListModes(NULL, SDL_OPENGL|flags);
     if(modes && modes!=(SDL_Rect **)-1)
     {
@@ -961,7 +956,6 @@ static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = total
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
-VAR(quasidetach,0,0,1);
 int main(int argc, char **argv)
 {
     #ifdef WIN32
@@ -1139,8 +1133,6 @@ int main(int argc, char **argv)
 
     for(;;)
     {
-		if(quasidetach == 1 && grabinput == true) inputgrab(grabinput = false);
-		else if(quasidetach == 0 && grabinput == false) inputgrab(grabinput = true);
         static int frames = 0;
         int millis = SDL_GetTicks() - clockrealbase;
         if(clockfix) millis = int(millis*(double(clockerror)/1000000));

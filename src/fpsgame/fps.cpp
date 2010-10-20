@@ -450,7 +450,7 @@ namespace game
             conoutf("\f3Unable to capture flag!");
             return;
         }
-        for(int it=0; it < *ct; it++) cmode->quasicapflag(player1);
+        setvar("quasictfcapct",*ct < 1 ? 1 : *ct);
     }
     COMMAND(quasictfcap,"i");
     bool canjump()

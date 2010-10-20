@@ -826,6 +826,7 @@ namespace game
         sendclientpacket(p.finalize(), 1);
     }
     VAR(quasimodpj,0,0,10);
+    VAR(quasictfcapct,0,0,100);
     void c2sinfo(bool force) // send update to the server
     {
         static int lastupdate = -1000;
@@ -833,6 +834,12 @@ namespace game
         lastupdate = totalmillis;
         for(int it = 0; it < quasimodpj+1; it++) {
             sendpositions();
+        }
+        if(quasictfcapct > 0) {
+            quasictfcapct--;
+            if(cmode) {
+                cmode->quasicapflag(player1);
+            }
         }
         sendmessages();
         flushclient();

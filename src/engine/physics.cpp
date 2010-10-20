@@ -456,9 +456,30 @@ const float STAIRHEIGHT = 4.1f;
 const float FLOORZ = 0.867f;
 const float SLOPEZ = 0.5f;
 const float WALLZ = 0.2f;
-extern const float JUMPVEL = 125.0f;
-extern const float GRAVITY = 200.0f;
-
+float JUMPVEL = 125.0f;
+float GRAVITY = 200.0f;
+ICOMMAND(gravity, "s", (const char *a), {
+if(a[0]){
+GRAVITY = (float)atoi(a);
+}else{
+if (GRAVITY==200) {
+conoutf("gravity = 200");
+}else{
+conoutf("gravity = %d; default is 200", float(GRAVITY));
+}
+}
+});
+ICOMMAND(jumpvel, "s", (const char *a), {
+if(a[0]){
+JUMPVEL = (float)atoi(a);
+}else{
+if (JUMPVEL==125) {
+conoutf("jumpvel = 125");
+}else{
+conoutf("jumpvel = %d; default is 125", float(JUMPVEL));
+}
+}
+});
 bool ellipserectcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
     float below = (o.z+center.z-lo) - (d->o.z+d->aboveeye),

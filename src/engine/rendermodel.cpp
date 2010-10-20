@@ -1093,3 +1093,5 @@ void setbbfrommodel(dynent *d, const char *mdl)
     d->aboveeye  = radius.z*2*(1.0f-m->eyeheight);
 }
 
+extern const float JUMPVEL = 125.0f;
+extern const float GRAVITY = 200.0f;

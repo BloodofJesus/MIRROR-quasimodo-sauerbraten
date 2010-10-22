@@ -456,30 +456,13 @@ const float STAIRHEIGHT = 4.1f;
 const float FLOORZ = 0.867f;
 const float SLOPEZ = 0.5f;
 const float WALLZ = 0.2f;
-float JUMPVEL = 125.0f;
-float GRAVITY = 200.0f;
-ICOMMAND(gravity, "s", (const char *a), {
-if(a[0]){
-GRAVITY = (float)atoi(a);
-}else{
-if (GRAVITY==200) {
-conoutf("gravity = 200");
-}else{
-conoutf("gravity = %d; default is 200", float(GRAVITY));
-}
-}
-});
-ICOMMAND(jumpvel, "s", (const char *a), {
-if(a[0]){
-JUMPVEL = (float)atoi(a);
-}else{
-if (JUMPVEL==125) {
-conoutf("jumpvel = 125");
-}else{
-conoutf("jumpvel = %d; default is 125", float(JUMPVEL));
-}
-}
-});
+//float JUMPVEL = 125.0f;
+//float GRAVITY = 200.0f;
+FVARF(JUMPVEL,-1000,125,1000,{conoutf("JUMPVEL = %i (125)", JUMPVEL);});
+FVARF(GRAVITY,-1000,200,1000,{conoutf("GRAVITY = %i (200)", GRAVITY);});
+
+ICOMMAND(quasijumpvel, "f", (const float * newval), {setfvar("JUMPVEL",*newval);});
+ICOMMAND(quasigravity, "f", (const float * newval), {setfvar("GRAVITY",*newval);});
 bool ellipserectcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
     float below = (o.z+center.z-lo) - (d->o.z+d->aboveeye),

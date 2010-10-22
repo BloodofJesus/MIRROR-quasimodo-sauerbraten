@@ -285,6 +285,10 @@ void guibar()
     if(cgui) cgui->separator();
 }
 
+void qguispace(float * size) {
+    if(cgui) cgui->space(*size);
+}
+
 void guistrut(float *strut, int *alt)
 {
 	if(cgui)
@@ -535,6 +539,7 @@ COMMAND(guilist, "s");
 COMMAND(guialign, "is");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
+COMMAND(qguispace,"f");
 COMMAND(guistrut,"fi");
 COMMAND(guiimage,"ssfis");
 COMMAND(guislider,"siis");

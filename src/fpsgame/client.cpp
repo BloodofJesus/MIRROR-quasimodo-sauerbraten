@@ -1030,7 +1030,6 @@ namespace game
 	FVARP(quasidetectdist,0,80,1000);
 
 	VARP(quasichatcolorspec,0,0,1);
-	VAR(quasirespawnaimbot,0,0,1);
 
     void parsemessages(int cn, fpsent *d, ucharbuf &p)
     {
@@ -1253,16 +1252,7 @@ namespace game
                 s->state = CS_ALIVE;
                 if(cmode) cmode->pickspawn(s);
                 else findplayerspawn(s);
-				if(s == player1 && quasirespawnaimbot == 1 ) {
-					loopv(players)
-					{
-						vec v; //Unsure as to the purpose of this. Does not have z vector.
-						if(raycubelos(s->o, players[i]->o, v))
-						{
-							ai::getyawpitch(s->o,players[i]->o,s->yaw,s->pitch);
-						}
-					}
-				}
+
                 if(s == player1)
                 {
                     showscores(false);

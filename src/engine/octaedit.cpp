@@ -142,6 +142,30 @@ void toggleedit(bool force)
     if(!force) game::edittoggled(editmode);
 }
 
+void qtoggleedit(bool force)
+{
+    if(player->state!=CS_ALIVE && player->state!=CS_DEAD && player->state!=CS_EDITING) return; // do not allow dead players to edit to avoid state confusion
+    if(!(editmode = !editmode))
+    {
+        player->state = player->editstate;
+        player->o.z -= player->eyeheight;       // entinmap wants feet pos
+        entinmap(player);                       // find spawn closest to current floating pos
+    }
+    else
+    {
+        game::resetgamestate();
+        player->editstate = player->state;
+        player->state = CS_EDITING;
+    }
+    cancelsel();
+    stoppaintblendmap();
+    keyrepeat(editmode);
+    editing = entediting = editmode;
+    extern int fullbright;
+    if(fullbright) initlights();
+    if(!force) game::edittoggled(editmode);
+}
+
 bool noedit(bool view, bool msg)
 {
     if(!editmode) { if(msg) conoutf(CON_ERROR, "operation only allowed in edit mode"); return true; }
@@ -185,6 +209,7 @@ void selextend()
 }
 
 ICOMMAND(edittoggle, "", (), toggleedit(false));
+ICOMMAND(quasiedit, "", (), qtoggleedit(false));
 COMMAND(entcancel, "");
 COMMAND(cubecancel, "");
 COMMAND(cancelsel, "");

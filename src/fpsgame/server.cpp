@@ -591,7 +591,7 @@ namespace server
  
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
     {
-        if(gamemillis>=gamelimit || !sents.inrange(i) || !sents[i].spawned) return false;
+        if((m_timed && gamemillis>=gamelimit) || !sents.inrange(i) || !sents[i].spawned) return false;
         clientinfo *ci = getinfo(sender);
         if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type))) return false;
         sents[i].spawned = false;
@@ -1235,7 +1235,7 @@ namespace server
 
     int welcomepacket(packetbuf &p, clientinfo *ci)
     {
-        int hasmap = (m_edit && (clients.length()>1 || (ci && ci->local))) || (smapname[0] && (gamemillis<gamelimit || (ci && ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci ? ci->clientnum : -1, true, true, true)));
+        int hasmap = (m_edit && (clients.length()>1 || (ci && ci->local))) || (smapname[0] && (!m_timed || gamemillis<gamelimit || (ci && ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci ? ci->clientnum : -1, true, true, true)));
         putint(p, N_WELCOME);
         putint(p, hasmap);
         if(hasmap)
@@ -1715,7 +1715,7 @@ namespace server
         if(!gamepaused) gamemillis += curtime;
 
         if(m_demo) readdemo();
-        else if(!gamepaused && gamemillis < gamelimit)
+        else if(!gamepaused && (!m_timed || gamemillis < gamelimit))
         {
             processevents();
             if(curtime)
@@ -1743,7 +1743,7 @@ namespace server
         while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
         loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
-        if(nextexceeded && gamemillis > nextexceeded)
+        if(nextexceeded && gamemillis > nextexceeded && (!m_timed || gamemillis < gamelimit))
         {
             nextexceeded = 0;
             loopvrev(clients) 

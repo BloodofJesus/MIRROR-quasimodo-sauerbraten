@@ -821,7 +821,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
     else if(showboundingbox && !shadowmapping && !reflecting && !refracting && editmode)
     {
-        if(d && showboundingbox==1) 
+        if(d && showboundingbox==1 && d->type == ENT_PLAYER) 
         {
             render3dbox(d->o, d->eyeheight, d->aboveeye, d->radius);
             renderellipse(d->o, d->xradius, d->yradius, d->yaw);

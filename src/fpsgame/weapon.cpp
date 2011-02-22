@@ -880,8 +880,8 @@ namespace game
 
 	FVARP(quasiattackyaw,0,20,360);
 	FVARP(quasiattackpitch,0,20,180);
-	FVARP(quasiattackcylinderradius,0,50,10000);
-    FVARP(quasiattackcylinderheight,0,10,10000);
+	FVARP(quasiattackcylinderradius,0,10,100);
+    FVARP(quasiattackcylinderheight,0,0,100);
 	VARP(quasiattackassisttime,1,55,1000);
 
 	fpsent *qaimbotenemy = NULL;

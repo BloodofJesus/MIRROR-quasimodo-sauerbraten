@@ -1712,11 +1712,11 @@ namespace game
         char * copy_haystack = new char[strlen(haystack)];
         char * copy_straw = new char[strlen(straw)];
         char * r = NULL;
-        for(int it = 0; it < strlen(haystack); it++) {
+        for(unsigned int it = 0; it < strlen(haystack); it++) {
             copy_haystack[it] = tolower(haystack[it]);
         }
 
-        for(int it = 0; it < strlen(straw); it++) {
+        for(unsigned int it = 0; it < strlen(straw); it++) {
             copy_straw[it] = tolower(straw[it]);
         }
         r = strstr(copy_haystack,copy_straw);
